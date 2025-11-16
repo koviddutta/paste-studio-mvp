@@ -142,8 +142,8 @@ def view_paste_page() -> rx.Component:
     """The full page for viewing a paste."""
     return rx.el.main(
         header(),
-        delete_confirmation_dialog(),
         rx.el.div(
+            delete_confirmation_dialog(),
             paste_view(),
             class_name="flex flex-col items-center justify-start w-full min-h-[calc(100vh-65px)] p-4 sm:p-6 lg:p-8",
         ),
