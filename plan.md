@@ -1,35 +1,82 @@
-# Paste Studio MVP - Implementation Plan
+# Paste Studio MVP - Indian Sweets Paste Formulation Engine
 
-## Phase 1: Core Layout and Paste Creation UI ✅
-- [x] Design and implement the main layout with header, navigation, and content area
-- [x] Create the paste creation form with textarea, language selector, and expiration options
-- [x] Add action buttons (Create Paste, Clear, Settings) with modern styling
-- [x] Implement responsive design with proper spacing and modern SaaS aesthetics
-- [x] Set up state management for paste content and metadata
-
----
-
-## Phase 2: Paste Storage and Viewing System ✅
-- [x] Implement paste data model with ID generation, content, language, timestamp, and expiration
-- [x] Create paste submission handler that generates unique URLs
-- [x] Build paste viewing page with read-only display and metadata
-- [x] Add copy-to-clipboard functionality with visual feedback
-- [x] Implement URL routing for individual pastes
+## Current Goal
+Build a complete Indian sweets paste formulation system that:
+- Fetches recipes from Supabase (1000+ Indian sweets)
+- Classifies ingredients into 6 processing classes (A-F)
+- Generates detailed 40-step production SOPs
+- Calculates properties (water activity, shelf-life, viscosity, gelato dosage)
+- Runs safety validations
+- Outputs downloadable PDF SOPs
 
 ---
 
-## Phase 3: Syntax Highlighting and Enhanced Features ✅
-- [x] Integrate syntax highlighting library for code display
-- [x] Add language detection and selection dropdown (Python, JavaScript, HTML, CSS, etc.)
-- [x] Create "Recent Pastes" sidebar or section showing latest pastes
-- [x] Add paste expiration logic (1 hour, 1 day, 1 week, never)
-- [x] Implement delete functionality for pastes
-- [x] Polish UI with animations, transitions, and micro-interactions
+## Phase 1: Supabase Database Setup and Connection
+- [ ] Set up Supabase integration and test connection
+- [ ] Create database schema (ingredients_master, processing_rules, formulation_constants)
+- [ ] Seed initial data (ingredient classes, processing rules, sample recipes)
+- [ ] Create database query functions for recipes and ingredients
+- [ ] Test data retrieval with sample queries
 
 ---
 
-## Phase 4: UI Verification and Final Polish ✅
-- [x] Test paste creation flow with different languages and expiration settings
-- [x] Verify syntax highlighting works correctly on paste viewing page  
-- [x] Test recent pastes section displays correctly with multiple pastes
-- [x] Validate delete functionality and confirmation dialog
+## Phase 2: Ingredient Classification Engine
+- [ ] Build ingredient classifier with 6 classes (A-F: Dairy, Nut, Sugar, Fat, Stabilizer, Aromatic)
+- [ ] Implement ingredient properties (moisture, fat, protein percentages)
+- [ ] Create alias handling system (mawa → khoya)
+- [ ] Add processing parameters (temps, times, equipment) per class
+- [ ] Test classification with various ingredient names
+
+---
+
+## Phase 3: SOP Generation System
+- [ ] Implement Universal 10-Step Algorithm for SOP generation
+- [ ] Create detailed 40-step expansion logic with temps, times, equipment
+- [ ] Add step sequencing based on ingredient classes
+- [ ] Implement temperature rules enforcement (LBG at 85°C, fats at 65°C, aromatics <50°C)
+- [ ] Generate formatted SOP output with safety checks
+
+---
+
+## Phase 4: Properties Calculator and Validators
+- [ ] Implement Norrish equation for water activity calculation
+- [ ] Add shelf-life estimation based on water activity
+- [ ] Create viscosity calculator using power law model
+- [ ] Build gelato dosage calculator
+- [ ] Implement validation gates (Aw: 0.68-0.75, pH: 5.4-6.8, sugar: 20-40%, fat: 10-20%)
+
+---
+
+## Phase 5: FastAPI Backend Endpoints
+- [ ] Create POST /api/formulation/generate endpoint
+- [ ] Add GET /api/recipes/search with autocomplete
+- [ ] Implement complete formulation generation pipeline
+- [ ] Add error handling and validation responses
+- [ ] Test all endpoints with sample data
+
+---
+
+## Phase 6: Frontend UI - Recipe Search and Selection
+- [ ] Build recipe search page with autocomplete (1000+ recipes)
+- [ ] Add batch size input field
+- [ ] Create "Generate Formulation" button
+- [ ] Display loading states during processing
+- [ ] Implement navigation to formulation results
+
+---
+
+## Phase 7: Frontend UI - Formulation Display and SOP Viewer
+- [ ] Create formulation display page (ingredients table, properties)
+- [ ] Build 40-step SOP viewer with interactive checkboxes
+- [ ] Add properties dashboard (Aw, shelf-life, viscosity, dosage)
+- [ ] Implement PDF download functionality
+- [ ] Create troubleshooting page with problem selector
+
+---
+
+## Phase 8: UI Verification and Testing
+- [ ] Test complete flow: search → generate → view SOP
+- [ ] Verify property calculations display correctly
+- [ ] Test validation warnings for out-of-range values
+- [ ] Validate PDF generation and download
+- [ ] Test troubleshooting suggestions system
