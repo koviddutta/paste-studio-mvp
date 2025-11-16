@@ -6,3 +6,10 @@ What It Does
 – Calculates key properties (water activity, estimated shelf-life, viscosity, dosage for gelato base)
 – Runs basic safety checks (pasteurisation steps, water activity range, typical sugar/fat limits)
 – Outputs a full formulation + downloadable PDF SOP
+
+**Tech Stack**:
+- Backend: Python 3.9+ + FastAPI
+- Frontend: Reflex (React-based)
+- Database: Supabase PostgreSQL
+- Storage: Supabase or MinIO
+- Deployment: Reflex Cloud
