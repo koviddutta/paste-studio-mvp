@@ -9,12 +9,12 @@
 
 ---
 
-## Phase 2: Paste Storage and Viewing System
-- [ ] Implement paste data model with ID generation, content, language, timestamp, and expiration
-- [ ] Create paste submission handler that generates unique URLs
-- [ ] Build paste viewing page with read-only display and metadata
-- [ ] Add copy-to-clipboard functionality with visual feedback
-- [ ] Implement URL routing for individual pastes
+## Phase 2: Paste Storage and Viewing System ✅
+- [x] Implement paste data model with ID generation, content, language, timestamp, and expiration
+- [x] Create paste submission handler that generates unique URLs
+- [x] Build paste viewing page with read-only display and metadata
+- [x] Add copy-to-clipboard functionality with visual feedback
+- [x] Implement URL routing for individual pastes
 
 ---
 
