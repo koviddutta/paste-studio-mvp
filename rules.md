@@ -13,3 +13,5 @@ What It Does
 - Database: Supabase PostgreSQL
 - Storage: Supabase or MinIO
 - Deployment: Reflex Cloud
+
+**Timeline**: 4 weeks to MVP
