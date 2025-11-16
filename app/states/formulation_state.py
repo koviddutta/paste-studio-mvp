@@ -105,14 +105,11 @@ class FormulationState(rx.State):
                     self.is_generating = False
                 return
             ingredients_str = recipe_data.get("Ingredients", "")
-            parsed_ings = [i.strip().split(":") for i in ingredients_str.split(",")]
-            total_recipe_mass = sum(
-                [
-                    float(p[1])
-                    for p in parsed_ings
-                    if len(p) == 2 and p[1].strip().replace(".", "", 1).isdigit()
-                ]
-            )
+            logging.info(f"Parsing ingredients string: {ingredients_str}")
+            parsed_ings = [
+                ing.strip() for ing in ingredients_str.split(",") if ing.strip()
+            ]
+            total_recipe_mass = len(parsed_ings)
             if total_recipe_mass == 0:
                 async with self:
                     self.error_message = (
@@ -122,15 +119,28 @@ class FormulationState(rx.State):
                 return
             classified_ingredients_with_mass = []
             all_ingredients: list[RecipeIngredient] = []
-            formulation_warnings = []
-            for p in parsed_ings:
-                if len(p) != 2:
-                    continue
-                name, mass_str = (p[0].strip(), p[1].strip())
+            formulation_warnings = [
+                "Warning: Ingredient masses are estimated with equal weight distribution."
+            ]
+            import re
+
+            @rx.event
+            def clean_ingredient_name(ing_str: str) -> str:
+                ing_str = re.sub("^\\d+/\\d+\\s*", "", ing_str).strip()
+                ing_str = re.sub("^\\d+\\s*", "", ing_str).strip()
+                units = ["cup", "cups", "gram", "grams", "g", "kg", "tbsp", "tsp"]
+                for unit in units:
+                    ing_str = re.sub(
+                        f"^({unit})s?\\s*", "", ing_str, flags=re.IGNORECASE
+                    ).strip()
+                return ing_str.split("(")[0].strip()
+
+            for ing_string in parsed_ings:
                 try:
-                    mass_g = float(mass_str) * (
-                        self.batch_size_kg * 1000 / total_recipe_mass
-                    )
+                    name = clean_ingredient_name(ing_string)
+                    if not name:
+                        continue
+                    mass_g = self.batch_size_kg * 1000 / total_recipe_mass
                     classified_data = classify_ingredient(name)
                     all_ingredients.append(
                         {
@@ -144,10 +154,10 @@ class FormulationState(rx.State):
                         classified_ingredients_with_mass.append(classified_data)
                     else:
                         formulation_warnings.append(f"Unclassified ingredient: {name}")
-                except (ValueError, TypeError) as e:
-                    logging.exception(f"Error parsing mass for ingredient {name}: {e}")
+                except Exception as e:
+                    logging.exception(f"Error parsing ingredient '{ing_string}': {e}")
                     formulation_warnings.append(
-                        f"Could not parse mass for ingredient: {name}"
+                        f"Could not parse ingredient: {ing_string}"
                     )
             properties = calculate_all_properties(
                 classified_ingredients_with_mass, self.batch_size_kg * 1000
