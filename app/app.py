@@ -3,6 +3,7 @@ from app.components.header import header
 from app.components.paste_form import paste_form
 from app.components.view_paste import view_paste_page
 from app.states.paste_state import PasteState
+from app.components.recent_pastes import recent_pastes_section
 
 
 def index() -> rx.Component:
@@ -11,7 +12,8 @@ def index() -> rx.Component:
         header(),
         rx.el.div(
             paste_form(),
-            class_name="flex flex-col items-center justify-start w-full min-h-[calc(100vh-65px)] p-4 sm:p-6 lg:p-8",
+            recent_pastes_section(),
+            class_name="flex flex-col items-center justify-start w-full min-h-[calc(100vh-65px)] p-4 sm:p-6 lg:p-8 space-y-8",
         ),
         class_name="font-['Inter'] bg-gray-50",
     )
@@ -29,4 +31,5 @@ app = rx.App(
     ],
 )
 app.add_page(index, route="/")
+app.add_page(index, route="/", on_load=PasteState.on_load)
 app.add_page(view_paste_page, route="/paste/[paste_id]", on_load=PasteState.load_paste)

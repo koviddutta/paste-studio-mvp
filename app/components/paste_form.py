@@ -51,11 +51,19 @@ def expiration_selector() -> rx.Component:
 def action_buttons() -> rx.Component:
     """Action buttons for creating, clearing, and settings."""
     return rx.el.div(
-        rx.el.button(
-            rx.icon("settings-2", class_name="h-4 w-4"),
-            on_click=PasteState.show_settings,
-            class_name="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all",
-            type="button",
+        rx.el.div(
+            rx.el.button(
+                rx.icon("settings-2", class_name="h-4 w-4"),
+                on_click=PasteState.show_settings,
+                class_name="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all",
+                type="button",
+            ),
+            rx.el.kbd(
+                "⌘",
+                "K",
+                class_name="hidden md:inline-flex items-center gap-1 rounded border bg-white px-2 py-1.5 text-xs font-medium text-gray-500",
+            ),
+            class_name="flex items-center gap-2",
         ),
         rx.el.div(
             rx.el.button(
