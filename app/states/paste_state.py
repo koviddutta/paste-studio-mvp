@@ -1,7 +1,19 @@
 import reflex as rx
-from typing import Literal
+from typing import Literal, TypedDict, Optional
+import uuid
+from datetime import datetime, timedelta
 
 Expiration = Literal["1h", "1d", "1w", "never"]
+
+
+class Paste(TypedDict):
+    """A paste with its content and metadata."""
+
+    id: str
+    content: str
+    language: str
+    created_at: datetime
+    expires_at: Optional[datetime]
 
 
 class PasteState(rx.State):
@@ -10,7 +22,8 @@ class PasteState(rx.State):
     content: str = ""
     language: str = "python"
     expiration: Expiration = "1d"
-    is_loading: bool = False
+    pastes: dict[str, Paste] = {}
+    current_paste: Optional[Paste] = None
     languages: list[str] = [
         "python",
         "javascript",
@@ -35,12 +48,43 @@ class PasteState(rx.State):
 
     @rx.event
     def create_paste(self):
-        """Creates a new paste."""
+        """Creates a new paste, stores it, and redirects to its page."""
         if not self.content.strip():
             return rx.toast.error("Paste content cannot be empty.")
-        yield rx.toast.info(
-            f"Creating paste with language '{self.language}' and expiration '{self.expiration}'."
-        )
+        paste_id = uuid.uuid4().hex
+        now = datetime.utcnow()
+        expires_at = None
+        if self.expiration == "1h":
+            expires_at = now + timedelta(hours=1)
+        elif self.expiration == "1d":
+            expires_at = now + timedelta(days=1)
+        elif self.expiration == "1w":
+            expires_at = now + timedelta(weeks=1)
+        new_paste: Paste = {
+            "id": paste_id,
+            "content": self.content,
+            "language": self.language,
+            "created_at": now,
+            "expires_at": expires_at,
+        }
+        self.pastes[paste_id] = new_paste
+        self.content = ""
+        yield rx.toast.success("Paste created successfully!")
+        return rx.redirect(f"/paste/{paste_id}")
+
+    @rx.event
+    def load_paste(self):
+        """Loads a paste by its ID from the URL parameter."""
+        paste_id = self.router.page.params.get("paste_id", "")
+        paste = self.pastes.get(paste_id)
+        if not paste:
+            self.current_paste = None
+            return rx.redirect("/")
+        if paste["expires_at"] and datetime.utcnow() > paste["expires_at"]:
+            del self.pastes[paste_id]
+            self.current_paste = None
+            return rx.redirect("/")
+        self.current_paste = paste
 
     @rx.event
     def clear_content(self):

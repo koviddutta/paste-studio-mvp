@@ -1,6 +1,8 @@
 import reflex as rx
 from app.components.header import header
 from app.components.paste_form import paste_form
+from app.components.view_paste import view_paste_page
+from app.states.paste_state import PasteState
 
 
 def index() -> rx.Component:
@@ -27,3 +29,4 @@ app = rx.App(
     ],
 )
 app.add_page(index, route="/")
+app.add_page(view_paste_page, route="/paste/[paste_id]", on_load=PasteState.load_paste)

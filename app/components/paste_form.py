@@ -68,7 +68,7 @@ def action_buttons() -> rx.Component:
                 "Create Paste",
                 on_click=PasteState.create_paste,
                 class_name="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all active:scale-95",
-                type="submit",
+                type="button",
             ),
             class_name="flex items-center gap-3",
         ),
@@ -79,7 +79,7 @@ def action_buttons() -> rx.Component:
 def paste_form() -> rx.Component:
     """The main form for creating a new paste."""
     return rx.el.div(
-        rx.el.form(
+        rx.el.div(
             rx.el.div(
                 rx.el.textarea(
                     placeholder="Paste your code or text here...",
