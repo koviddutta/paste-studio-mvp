@@ -2,6 +2,7 @@ import reflex as rx
 from typing import Literal, TypedDict, Optional
 import uuid
 from datetime import datetime, timedelta
+import logging
 
 Expiration = Literal["1h", "1d", "1w", "never"]
 
@@ -75,15 +76,22 @@ class PasteState(rx.State):
     @rx.event
     def load_paste(self):
         """Loads a paste by its ID from the URL parameter."""
-        paste_id = self.router.page.params.get("paste_id", "")
+        try:
+            paste_id = self.router.page.params.get("paste_id", "")
+        except Exception as e:
+            logging.exception(f"Error getting paste_id: {e}")
+            paste_id = ""
+        if not paste_id:
+            self.current_paste = None
+            return rx.toast.error("Invalid paste ID.")
         paste = self.pastes.get(paste_id)
         if not paste:
             self.current_paste = None
-            return rx.redirect("/")
+            return rx.toast.error("Paste not found.")
         if paste["expires_at"] and datetime.utcnow() > paste["expires_at"]:
             del self.pastes[paste_id]
             self.current_paste = None
-            return rx.redirect("/")
+            return rx.toast.warning("This paste has expired.")
         self.current_paste = paste
 
     @rx.event
