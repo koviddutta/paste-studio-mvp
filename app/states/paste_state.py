@@ -139,7 +139,7 @@ class PasteState(rx.State):
     @rx.event
     def cancel_delete(self):
         """Closes the delete confirmation dialog."""
-        self._close_dialog()
+        self.show_delete_dialog = False
 
     @rx.event
     def delete_paste(self):

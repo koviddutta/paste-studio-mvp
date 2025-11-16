@@ -17,38 +17,38 @@ def delete_confirmation_dialog() -> rx.Component:
     """Confirmation dialog for deleting a paste."""
     return rx.radix.primitives.dialog.root(
         rx.radix.primitives.dialog.trigger(rx.el.div()),
-        rx.radix.primitives.dialog.content(
-            rx.radix.primitives.dialog.title(
-                "Confirm Deletion", class_name="text-lg font-semibold"
+        rx.radix.primitives.dialog.portal(
+            rx.radix.primitives.dialog.overlay(
+                class_name="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             ),
-            rx.radix.primitives.dialog.description(
-                "Are you sure you want to delete this paste? This action cannot be undone.",
-                class_name="my-4 text-gray-600",
-            ),
-            rx.el.div(
-                rx.radix.primitives.dialog.close(
+            rx.radix.primitives.dialog.content(
+                rx.radix.primitives.dialog.title(
+                    "Confirm Deletion", class_name="text-lg font-semibold text-gray-900"
+                ),
+                rx.radix.primitives.dialog.description(
+                    "Are you sure you want to delete this paste? This action cannot be undone.",
+                    class_name="my-4 text-gray-600 text-sm",
+                ),
+                rx.el.div(
+                    rx.radix.primitives.dialog.close(
+                        rx.el.button(
+                            "Cancel",
+                            on_click=PasteState.cancel_delete,
+                            class_name="px-5 py-2 text-sm font-semibold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all active:scale-95",
+                        )
+                    ),
                     rx.el.button(
-                        "Cancel",
-                        on_click=PasteState.cancel_delete,
-                        class_name="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors",
-                    )
+                        "Delete Paste",
+                        on_click=PasteState.delete_paste,
+                        class_name="px-5 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg shadow-sm hover:bg-red-700 transition-all active:scale-95",
+                    ),
+                    class_name="flex justify-end gap-3 mt-6",
                 ),
-                rx.el.button(
-                    "Delete Paste",
-                    on_click=PasteState.delete_paste,
-                    class_name="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors",
-                ),
-                class_name="flex justify-end gap-4 mt-4",
+                class_name="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-md rounded-2xl bg-white p-6 shadow-lg",
             ),
-            style={
-                "max_width": "450px",
-                "border_radius": "12px",
-                "padding": "24px",
-                "background_color": "white",
-                "box_shadow": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-            },
         ),
         open=PasteState.show_delete_dialog,
+        on_open_change=PasteState.set_show_delete_dialog,
     )
 
 
