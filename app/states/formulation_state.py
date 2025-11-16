@@ -42,10 +42,20 @@ class FormulationState(rx.State):
     is_generating: bool = False
     formulation_result: Optional[FormulationResult] = None
     error_message: str = ""
+    completed_sop_steps: list[int] = []
+
+    @rx.event
+    def toggle_sop_step(self, step_number: int):
+        """Toggles the completion status of an SOP step."""
+        if step_number in self.completed_sop_steps:
+            self.completed_sop_steps.remove(step_number)
+        else:
+            self.completed_sop_steps.append(step_number)
 
     def _reset_formulation(self):
         self.formulation_result = None
         self.error_message = ""
+        self.completed_sop_steps = []
 
     @rx.event
     def on_search_query_change(self, query: str):

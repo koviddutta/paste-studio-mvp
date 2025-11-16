@@ -1,5 +1,6 @@
 import reflex as rx
 from app.states.formulation_state import FormulationState
+from .formulation_display import formulation_results_display
 
 
 def search_input() -> rx.Component:
@@ -76,35 +77,6 @@ def generate_button() -> rx.Component:
         disabled=FormulationState.is_generating
         | (FormulationState.selected_recipe_name == ""),
         class_name="flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-    )
-
-
-def formulation_results_display() -> rx.Component:
-    """Displays the generated formulation results, warnings, or errors."""
-    return rx.el.div(
-        rx.cond(
-            FormulationState.error_message != "",
-            rx.el.div(
-                rx.icon("flag_triangle_right", class_name="h-5 w-5 text-red-500"),
-                rx.el.p(FormulationState.error_message, class_name="text-red-700"),
-                class_name="flex items-center gap-3 p-4 bg-red-100 border border-red-200 rounded-lg w-full max-w-2xl",
-            ),
-        ),
-        rx.cond(
-            FormulationState.formulation_result,
-            rx.el.div(
-                rx.el.h3(
-                    f"Formulation for {FormulationState.formulation_result['sweet_name']}",
-                    class_name="text-2xl font-bold text-gray-800 mb-4",
-                ),
-                rx.el.pre(
-                    FormulationState.formulation_result.to_string(),
-                    class_name="p-4 bg-gray-100 border border-gray-200 rounded-lg text-xs overflow-x-auto",
-                ),
-                class_name="w-full max-w-4xl p-6 bg-white border border-gray-200 rounded-2xl shadow-sm mt-8",
-            ),
-        ),
-        class_name="w-full flex flex-col items-center mt-8",
     )
 
 
