@@ -25,10 +25,36 @@ def get_supabase_client() -> Optional[Client]:
 supabase = get_supabase_client()
 
 
+def execute_sql_file(filename: str) -> None:
+    """Executes a SQL file. Note: Best practice is to use Supabase migrations or the SQL Editor.
+
+    This function is for demonstration and may not handle complex, multi-statement SQL files well.
+    It reads a SQL file, splits it by ';', and attempts to execute each command.
+    This is NOT a recommended production approach for schema changes.
+
+    Args:
+        filename: The path to the SQL file.
+    """
+    if not supabase:
+        logging.error("Cannot execute SQL file, Supabase client is not available.")
+        return
+    try:
+        with open(filename, "r") as f:
+            sql_commands = f.read().split(";")
+        for command in sql_commands:
+            command = command.strip()
+            if command:
+                logging.warning(
+                    f"MANUAL ACTION: Run the following command in Supabase SQL Editor:\n---\n{command};\n---"
+                )
+    except Exception as e:
+        logging.exception(f"Error executing SQL file '{filename}': {e}")
+
+
 def fetch_recipe(
     sweet_name: str,
 ) -> Optional[dict[str, str | int | float | None | list[str]]]:
-    """Fetches a recipe by its name with partial matching.
+    """Fetches a recipe by its name with partial matching from the 'desserts_master_v2' table.
 
     Args:
         sweet_name: The name of the sweet to search for.
@@ -40,9 +66,9 @@ def fetch_recipe(
         return None
     try:
         response = (
-            supabase.table("recipes")
+            supabase.table("desserts_master_v2")
             .select("*")
-            .ilike("name", f"%{sweet_name}%")
+            .ilike("RecipeName", f"%{sweet_name}%")
             .limit(1)
             .execute()
         )
@@ -144,13 +170,26 @@ def fetch_constants() -> dict[str, float]:
 
 
 def seed_initial_data():
-    """Seeds the database with initial ingredients and constants. This is for demonstration.
+    """Seeds the database with initial ingredients. This is for demonstration.
 
-    In a real application, this would be a migration script.
+    In a real application, this would be a migration script. Checks if tables exist first.
     """
     if not supabase:
         logging.error("Cannot seed data, Supabase client is not available.")
         return
+    try:
+        supabase.table("ingredients_master").select("id").limit(1).execute()
+    except Exception as e:
+        if "PGRST205" in str(e):
+            logging.error(
+                "'ingredients_master' table not found. Please run the schema.sql script in your Supabase SQL Editor first."
+            )
+            return
+        else:
+            logging.exception(
+                f"An unexpected error occurred while checking for tables: {e}"
+            )
+            return
     ingredients_to_seed = [
         {
             "name": "khoya",
