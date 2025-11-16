@@ -44,7 +44,7 @@ def delete_confirmation_dialog() -> rx.Component:
                     ),
                     class_name="flex justify-end gap-3 mt-6",
                 ),
-                class_name="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-md rounded-2xl bg-white p-6 shadow-lg",
+                class_name="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-md rounded-2xl bg-white p-6 shadow-lg",
             ),
         ),
         open=PasteState.show_delete_dialog,

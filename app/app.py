@@ -31,4 +31,9 @@ app = rx.App(
     ],
 )
 app.add_page(index, route="/", on_load=PasteState.on_load)
-app.add_page(view_paste_page, route="/paste/[paste_id]", on_load=PasteState.load_paste)
+app.add_page(
+    view_paste_page,
+    route="/paste/[paste_id]",
+    on_load=PasteState.load_paste,
+    title="View Paste | Paste Studio",
+)
