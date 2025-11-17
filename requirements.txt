@@ -3,3 +3,4 @@ reflex==0.8.17
 reflex-monaco
 supabase
 postgrest
+PyGithub
