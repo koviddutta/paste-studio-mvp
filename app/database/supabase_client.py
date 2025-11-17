@@ -28,7 +28,10 @@ supabase = get_supabase_client()
 def fetch_recipe(
     sweet_name: str,
 ) -> Optional[dict[str, str | int | float | None | list[str]]]:
-    """Fetches a recipe by its name with partial matching from the 'desserts_master_v2' table.
+    """Fetches a recipe by its name from the 'desserts_master_v2' table.
+
+    It first tries an exact match, then a match starting with the name, and
+    finally a partial match anywhere in the name.
 
     Args:
         sweet_name: The name of the sweet to search for.
@@ -38,20 +41,26 @@ def fetch_recipe(
     """
     if not supabase:
         return None
-    try:
-        response = (
-            supabase.table("desserts_master_v2")
-            .select("*")
-            .ilike("RecipeName", f"%{sweet_name}%")
-            .limit(1)
-            .execute()
-        )
-        if response.data:
-            return response.data[0]
-        return None
-    except Exception as e:
-        logging.exception(f"Error fetching recipe '{sweet_name}': {e}")
-        return None
+    queries = [
+        supabase.table("desserts_master_v2").select("*").eq("RecipeName", sweet_name),
+        supabase.table("desserts_master_v2")
+        .select("*")
+        .ilike("RecipeName", f"{sweet_name}%"),
+        supabase.table("desserts_master_v2")
+        .select("*")
+        .ilike("RecipeName", f"%{sweet_name}%"),
+    ]
+    for query in queries:
+        try:
+            response = query.limit(1).execute()
+            if response.data:
+                logging.info(f"Successfully fetched recipe '{sweet_name}'.")
+                return response.data[0]
+        except Exception as e:
+            logging.exception(f"Error fetching recipe '{sweet_name}': {e}")
+            return None
+    logging.warning(f"Recipe '{sweet_name}' not found after multiple attempts.")
+    return None
 
 
 def search_recipes(query: str, limit: int = 10) -> list[dict[str, str]]:
@@ -167,6 +176,57 @@ def fetch_constants() -> dict[str, float]:
     except Exception as e:
         logging.exception(f"Error fetching formulation constants: {e}")
         return {}
+
+
+def validate_database_setup() -> dict[str, bool]:
+    """Validates that all required tables exist and have data.
+
+    Returns:
+        A dictionary indicating which components are properly set up.
+    """
+    if not supabase:
+        return {
+            "connection": False,
+            "ingredients_master": False,
+            "processing_rules": False,
+            "formulation_constants": False,
+            "desserts_master_v2": False,
+        }
+    validation_results = {
+        "connection": True,
+        "ingredients_master": False,
+        "processing_rules": False,
+        "formulation_constants": False,
+        "desserts_master_v2": False,
+    }
+    try:
+        response = supabase.table("ingredients_master").select("id").limit(1).execute()
+        validation_results["ingredients_master"] = len(response.data) > 0
+    except Exception as e:
+        logging.exception(f"ingredients_master table check failed: {e}")
+    try:
+        response = supabase.table("processing_rules").select("id").limit(1).execute()
+        validation_results["processing_rules"] = len(response.data) > 0
+    except Exception as e:
+        logging.exception(f"processing_rules table check failed: {e}")
+    try:
+        response = (
+            supabase.table("formulation_constants")
+            .select("constant_name")
+            .limit(1)
+            .execute()
+        )
+        validation_results["formulation_constants"] = len(response.data) > 0
+    except Exception as e:
+        logging.exception(f"formulation_constants table check failed: {e}")
+    try:
+        response = (
+            supabase.table("desserts_master_v2").select("RecipeName").limit(1).execute()
+        )
+        validation_results["desserts_master_v2"] = len(response.data) > 0
+    except Exception as e:
+        logging.exception(f"desserts_master_v2 table check failed: {e}")
+    return validation_results
 
 
 def validate_database_setup() -> dict[str, bool]:

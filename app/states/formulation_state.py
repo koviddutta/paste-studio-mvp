@@ -106,6 +106,13 @@ class FormulationState(rx.State):
             self._reset_formulation()
             self.is_generating = True
         try:
+            db_validation = supabase_client.validate_database_setup()
+            if not all(db_validation.values()):
+                missing_tables = [k for k, v in db_validation.items() if not v]
+                async with self:
+                    self.error_message = f"Database setup is incomplete. Missing: {', '.join(missing_tables)}. Please run the setup script."
+                    self.is_generating = False
+                return
             recipe_data = supabase_client.fetch_recipe(self.selected_recipe_name)
             if not recipe_data:
                 async with self:
