@@ -213,61 +213,10 @@ def validate_database_setup() -> dict[str, bool]:
         except APIError as e:
             if e.code != "PGRST205":
                 logging.exception(
-                    f"{table_name} table check failed with API error: {e}"
+                    f"{table_name} table check failed with unexpected API error: {e}"
                 )
         except Exception as e:
             logging.exception(
                 f"{table_name} table check failed with general error: {e}"
             )
-    return validation_results
-
-
-def validate_database_setup() -> dict[str, bool]:
-    """Validates that all required tables exist and have data.
-
-    Returns:
-        A dictionary indicating which components are properly set up.
-    """
-    if not supabase:
-        return {
-            "connection": False,
-            "ingredients_master": False,
-            "processing_rules": False,
-            "formulation_constants": False,
-            "desserts_master_v2": False,
-        }
-    validation_results = {
-        "connection": True,
-        "ingredients_master": False,
-        "processing_rules": False,
-        "formulation_constants": False,
-        "desserts_master_v2": False,
-    }
-    try:
-        response = supabase.table("ingredients_master").select("id").limit(1).execute()
-        validation_results["ingredients_master"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"ingredients_master table check failed: {e}")
-    try:
-        response = supabase.table("processing_rules").select("id").limit(1).execute()
-        validation_results["processing_rules"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"processing_rules table check failed: {e}")
-    try:
-        response = (
-            supabase.table("formulation_constants")
-            .select("constant_name")
-            .limit(1)
-            .execute()
-        )
-        validation_results["formulation_constants"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"formulation_constants table check failed: {e}")
-    try:
-        response = (
-            supabase.table("desserts_master_v2").select("RecipeName").limit(1).execute()
-        )
-        validation_results["desserts_master_v2"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"desserts_master_v2 table check failed: {e}")
     return validation_results
