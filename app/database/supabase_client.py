@@ -2,6 +2,7 @@ import os
 import logging
 from typing import Any, Optional
 from supabase import create_client, Client
+from postgrest.exceptions import APIError
 
 
 def get_supabase_client() -> Optional[Client]:
@@ -199,33 +200,25 @@ def validate_database_setup() -> dict[str, bool]:
         "formulation_constants": False,
         "desserts_master_v2": False,
     }
-    try:
-        response = supabase.table("ingredients_master").select("id").limit(1).execute()
-        validation_results["ingredients_master"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"ingredients_master table check failed: {e}")
-    try:
-        response = supabase.table("processing_rules").select("id").limit(1).execute()
-        validation_results["processing_rules"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"processing_rules table check failed: {e}")
-    try:
-        response = (
-            supabase.table("formulation_constants")
-            .select("constant_name")
-            .limit(1)
-            .execute()
-        )
-        validation_results["formulation_constants"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"formulation_constants table check failed: {e}")
-    try:
-        response = (
-            supabase.table("desserts_master_v2").select("RecipeName").limit(1).execute()
-        )
-        validation_results["desserts_master_v2"] = len(response.data) > 0
-    except Exception as e:
-        logging.exception(f"desserts_master_v2 table check failed: {e}")
+    tables_to_check = {
+        "ingredients_master": "id",
+        "processing_rules": "id",
+        "formulation_constants": "constant_name",
+        "desserts_master_v2": "RecipeName",
+    }
+    for table_name, column in tables_to_check.items():
+        try:
+            response = supabase.table(table_name).select(column).limit(1).execute()
+            validation_results[table_name] = len(response.data) > 0
+        except APIError as e:
+            if e.code != "PGRST205":
+                logging.exception(
+                    f"{table_name} table check failed with API error: {e}"
+                )
+        except Exception as e:
+            logging.exception(
+                f"{table_name} table check failed with general error: {e}"
+            )
     return validation_results
 
 
