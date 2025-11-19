@@ -133,7 +133,7 @@ INSERT INTO ingredients_master (name, class, aliases, moisture_pct, fat_pct, pro
 ('ghee', 'D_FAT', ARRAY['clarified butter'], 0.5, 99.5, 0.0, 0.0, 65, 2, 'Mixer'),
 ('butter', 'D_FAT', ARRAY['unsalted butter'], 15.0, 81.0, 1.0, 0.5, 65, 2, 'Mixer'),
 ('oil', 'D_FAT', ARRAY['vegetable oil', 'sunflower oil'], 0.0, 100.0, 0.0, 0.0, 65, 2, 'Mixer'),
-('cocoa butter', 'D_FAT', ARRAY[], 0.0, 100.0, 0.0, 0.0, 65, 2, 'Mixer')
+('cocoa butter', 'D_FAT', ARRAY[]::TEXT[], 0.0, 100.0, 0.0, 0.0, 65, 2, 'Mixer')
 ON CONFLICT (name) DO NOTHING;
 
 -- Class E: STABILIZERS
