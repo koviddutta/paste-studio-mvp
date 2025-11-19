@@ -23,3 +23,9 @@ app = rx.App(
     ],
 )
 app.add_page(index, route="/", title="Indian Sweets Formulation Engine")
+app.add_page(
+    lambda: rx.fragment(
+        rx.script("window.location.href = 'https://github.com/reflex-dev/reflex'")
+    ),
+    route="/docs",
+)
