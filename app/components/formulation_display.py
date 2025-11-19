@@ -1,5 +1,9 @@
 import reflex as rx
 from app.states.formulation_state import FormulationState, RecipeIngredient, SOPStep
+from app.components.ingredient_distribution import (
+    ingredient_distribution_card,
+    classified_ingredients_list,
+)
 from typing import Union
 
 
@@ -26,17 +30,24 @@ def _property_card(
 
 
 def _validation_status_badge(status: rx.Var[str]) -> rx.Component:
-    """A badge to display validation status (PASS, WARNING, FAIL)."""
+    """A badge to display validation status (OPTIMAL, ACCEPTABLE, CRITICAL)."""
     return rx.el.span(
         status,
-        class_name=rx.cond(
-            status == "PASS",
-            "px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full",
-            rx.cond(
-                status == "WARNING",
+        class_name=rx.match(
+            status,
+            (
+                "OPTIMAL",
+                "px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full",
+            ),
+            (
+                "ACCEPTABLE",
                 "px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full",
+            ),
+            (
+                "CRITICAL",
                 "px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full",
             ),
+            "px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full",
         ),
     )
 
@@ -229,7 +240,7 @@ def formulation_results_display() -> rx.Component:
                                     "g/kg",
                                     "text-pink-500",
                                 ),
-                                class_name="grid grid-cols-1 sm:grid-cols-2 gap-4",
+                                class_name="space-y-3",
                             ),
                         ),
                         rx.el.div(
@@ -238,29 +249,77 @@ def formulation_results_display() -> rx.Component:
                                 class_name="text-xl font-semibold text-gray-800 mb-4",
                             ),
                             rx.el.div(
+                                rx.el.div(
+                                    rx.el.p(
+                                        "Scientific Confidence Score",
+                                        class_name="text-sm font-medium text-gray-500",
+                                    ),
+                                    rx.el.div(
+                                        rx.el.div(
+                                            class_name="bg-purple-600 h-3 rounded-full",
+                                            width=result["validation"][
+                                                "overall_score"
+                                            ].to_string()
+                                            + "%",
+                                        ),
+                                        class_name="w-full bg-gray-200 rounded-full h-3",
+                                    ),
+                                    rx.el.p(
+                                        f"{result['validation']['overall_score'].to_string()}%",
+                                        class_name="text-lg font-bold text-gray-800",
+                                    ),
+                                    class_name="space-y-2 p-4 bg-white rounded-xl border border-gray-200 shadow-sm",
+                                ),
                                 rx.foreach(
-                                    result["validation"]["results"],
+                                    result["validation"]["validations"],
                                     lambda res: rx.el.div(
-                                        _validation_status_badge(res["status"]),
+                                        rx.el.div(
+                                            rx.el.div(
+                                                _validation_status_badge(res["status"]),
+                                                rx.el.p(
+                                                    res["framework_name"],
+                                                    class_name="font-semibold",
+                                                ),
+                                                class_name="flex items-center gap-2",
+                                            ),
+                                            rx.el.p(
+                                                f"{res['measured_value']} (Target: {res['target_range']})",
+                                                class_name="text-sm font-bold",
+                                            ),
+                                            class_name="flex items-center justify-between",
+                                        ),
                                         rx.el.p(
                                             res["message"],
-                                            class_name="text-sm text-gray-700",
+                                            class_name="text-sm text-gray-700 mt-1",
                                         ),
-                                        class_name="flex items-center gap-3 p-3 bg-white border-l-4 rounded-r-lg",
-                                        border_left_color=rx.cond(
-                                            res["status"] == "PASS",
-                                            "var(--green-500)",
-                                            rx.cond(
-                                                res["status"] == "WARNING",
-                                                "var(--yellow-500)",
-                                                "var(--red-500)",
-                                            ),
+                                        rx.el.p(
+                                            res["explanation"],
+                                            class_name="text-xs text-gray-500 italic mt-2",
+                                        ),
+                                        class_name="p-3 bg-white border-l-4 rounded-r-lg",
+                                        border_left_color=rx.match(
+                                            res["status"],
+                                            ("OPTIMAL", "var(--green-500)"),
+                                            ("ACCEPTABLE", "var(--yellow-500)"),
+                                            ("CRITICAL", "var(--red-500)"),
+                                            "var(--gray-300)",
                                         ),
                                     ),
                                 ),
                                 class_name="space-y-3",
                             ),
                         ),
+                        ingredient_distribution_card(),
+                        classified_ingredients_list(),
+                        rx.el.div(
+                            rx.el.h3(
+                                "Ingredients Breakdown",
+                                class_name="text-xl font-semibold text-gray-800 mb-4",
+                            ),
+                            rx.el.div(class_name="space-y-3"),
+                        ),
+                        ingredient_distribution_card(),
+                        classified_ingredients_list(),
                         rx.el.div(
                             rx.el.h3(
                                 "Ingredients Breakdown",
