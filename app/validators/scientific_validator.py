@@ -234,7 +234,7 @@ def validate_formulation_scientifically(
                 "explanation": fat_thresh["explanation"],
             }
         )
-    balance_rules = supabase_client.fetch_msnf_stabilizer_balance_rules().get(
+    balance_rules = supabase_client.fetch_msnf_stabilizer_thresholds().get(
         formulation_type
     )
     if balance_rules:
