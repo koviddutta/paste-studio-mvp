@@ -19,6 +19,7 @@ from app.database.gelato_university_client import (
     get_sugar_recommendations,
     calculate_texture_prediction,
 )
+from app.database.supabase_client import ValidationThresholds
 
 ValidationStatus = Literal["OPTIMAL", "ACCEPTABLE", "CRITICAL"]
 
@@ -45,7 +46,8 @@ class ScientificValidationReport(TypedDict):
 
 
 def _get_validation_status(
-    value: float, thresholds: ExtendedValidationThresholds | dict[str, float]
+    value: float,
+    thresholds: ValidationThresholds | ExtendedValidationThresholds | dict[str, float],
 ) -> tuple[ValidationStatus, float]:
     """Determines the status and score based on thresholds."""
     optimal_min = thresholds.get("optimal_min")
@@ -99,16 +101,22 @@ def calculate_confidence_score(
 def _find_threshold(
     param: str,
     formulation_type: str,
-    thresholds: Mapping[str, list[ExtendedValidationThresholds]],
-) -> Optional[ExtendedValidationThresholds]:
+    thresholds: Mapping[str, list[ExtendedValidationThresholds] | ValidationThresholds],
+) -> Optional[ExtendedValidationThresholds | ValidationThresholds]:
     """Finds the correct threshold object for a parameter and formulation type."""
-    param_thresholds = thresholds.get(param, [])
-    for t in param_thresholds:
-        if t["formulation_type"] == formulation_type:
-            return t
-    for t in param_thresholds:
-        if t["formulation_type"] == "default":
-            return t
+    param_thresholds = thresholds.get(param)
+    if not param_thresholds:
+        return None
+    if isinstance(param_thresholds, list):
+        for t in param_thresholds:
+            if t.get("formulation_type") == formulation_type:
+                return t
+        for t in param_thresholds:
+            if t.get("formulation_type") == "default":
+                return t
+        return None
+    if isinstance(param_thresholds, dict):
+        return param_thresholds
     return None
 
 
@@ -116,7 +124,7 @@ def validate_formulation_scientifically(
     properties: FormulationProperties,
     classified_ingredients: list[IngredientData],
     sop: list[SOPStep],
-    thresholds: Mapping[str, list[ExtendedValidationThresholds]],
+    thresholds: Mapping[str, list[ExtendedValidationThresholds] | ValidationThresholds],
     gelato_constants: Mapping[str, ExtendedGelatoScienceConstants],
 ) -> ScientificValidationReport:
     """Runs the full suite of Gelato University scientific validation checks."""
