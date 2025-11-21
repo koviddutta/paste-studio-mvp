@@ -1,27 +1,16 @@
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.env
+.venv
+env/
 venv/
 ENV/
-env/
-
-# Reflex
 .web/
-assets/uploaded_files/
-
-# Environment
-.env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
+.reflex/
+*.db
+*.sqlite
+*.log
 .DS_Store
-Thumbs.db
