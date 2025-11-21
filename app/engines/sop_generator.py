@@ -80,7 +80,7 @@ def generate_sop(
         )
         if not pasteurization_found:
             warnings.append(
-                "Safety Warning: Dairy is present but no pasteurization step (>=72\\[DEG]C) was found."
+                "Safety Warning: Dairy is present but no pasteurization step (>=72°C) was found."
             )
     logging.info(f"Generated SOP with {len(sop)} steps and {len(warnings)} warnings.")
     return (sop, warnings)
