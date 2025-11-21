@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Optional, Mapping, TypedDict
+from typing import Any, Optional
 from supabase import create_client, Client
 from postgrest.exceptions import APIError
 
@@ -179,72 +179,6 @@ def fetch_constants() -> dict[str, float]:
         return {}
 
 
-class GelatoScienceConstants(TypedDict):
-    sugar_type: str
-    afp_value: float
-    sp_value: float
-    de_value: float
-
-
-def fetch_gelato_science_constants() -> Mapping[str, GelatoScienceConstants]:
-    """Fetches all gelato science constants (AFP, SP, DE) from the database."""
-    if not supabase:
-        return {}
-    try:
-        response = supabase.table("gelato_science_constants").select("*").execute()
-        if response.data:
-            return {item["sugar_type"].lower(): item for item in response.data}
-        return {}
-    except Exception as e:
-        logging.exception(f"Error fetching gelato science constants: {e}")
-        return {}
-
-
-class ValidationThresholds(TypedDict):
-    optimal_min: float
-    optimal_max: float
-    acceptable_min: float
-    acceptable_max: float
-    explanation: str
-
-
-def fetch_validation_thresholds() -> Mapping[str, ValidationThresholds]:
-    """Fetches all scientific validation thresholds from the database."""
-    if not supabase:
-        return {}
-    try:
-        response = supabase.table("validation_thresholds").select("*").execute()
-        if response.data:
-            return {item["parameter_name"]: item for item in response.data}
-        return {}
-    except Exception as e:
-        logging.exception(f"Error fetching validation thresholds: {e}")
-        return {}
-
-
-class MsnfStabilizerBalance(TypedDict):
-    formulation_type: str
-    msnf_min_pct: float
-    msnf_max_pct: float
-    stabilizer_min_pct: float
-    stabilizer_max_pct: float
-    explanation: str
-
-
-def fetch_msnf_stabilizer_thresholds() -> Mapping[str, MsnfStabilizerBalance]:
-    """Fetches all MSNF and Stabilizer balance thresholds from the database."""
-    if not supabase:
-        return {}
-    try:
-        response = supabase.table("msnf_stabilizer_balance").select("*").execute()
-        if response.data:
-            return {item["formulation_type"]: item for item in response.data}
-        return {}
-    except Exception as e:
-        logging.exception(f"Error fetching msnf_stabilizer_balance thresholds: {e}")
-        return {}
-
-
 def validate_database_setup() -> dict[str, bool]:
     """Validates that all required tables exist and have data.
 
@@ -265,18 +199,12 @@ def validate_database_setup() -> dict[str, bool]:
         "processing_rules": False,
         "formulation_constants": False,
         "desserts_master_v2": False,
-        "gelato_science_constants": False,
-        "validation_thresholds": False,
-        "msnf_stabilizer_balance": False,
     }
     tables_to_check = {
         "ingredients_master": "id",
         "processing_rules": "id",
         "formulation_constants": "constant_name",
         "desserts_master_v2": "RecipeName",
-        "gelato_science_constants": "sugar_type",
-        "validation_thresholds": "parameter_name",
-        "msnf_stabilizer_balance": "formulation_type",
     }
     for table_name, column in tables_to_check.items():
         try:
