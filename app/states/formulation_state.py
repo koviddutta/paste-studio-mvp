@@ -3,19 +3,15 @@ from typing import TypedDict, Any, Optional
 import asyncio
 import logging
 from app.database import supabase_client
-from app.database.ingredient_mapper import (
-    get_recipe_with_classified_ingredients,
-    get_ingredient_class_distribution,
-)
 from app.engines.ingredient_classifier import classify_ingredient, IngredientData
 from app.engines.sop_generator import generate_sop, SOPStep
 from app.calculators.property_calculator import (
     calculate_all_properties,
     FormulationProperties,
 )
-from app.validators.scientific_validator import (
-    validate_formulation_scientifically,
-    ScientificValidationReport,
+from app.validators.formulation_validator import (
+    validate_formulation,
+    FullValidationReport,
 )
 
 
@@ -31,7 +27,7 @@ class FormulationResult(TypedDict):
     ingredients: list[RecipeIngredient]
     properties: Optional[FormulationProperties]
     sop: list[SOPStep]
-    validation: Optional[ScientificValidationReport]
+    validation: Optional[FullValidationReport]
     warnings: list[str]
 
 
@@ -47,17 +43,6 @@ class FormulationState(rx.State):
     formulation_result: Optional[FormulationResult] = None
     error_message: str = ""
     completed_sop_steps: list[int] = []
-    ingredient_distribution: dict[str, int] = {
-        "A_DAIRY": 0,
-        "B_NUT": 0,
-        "C_SUGAR": 0,
-        "D_FAT": 0,
-        "E_STABILIZER": 0,
-        "F_AROMATIC": 0,
-        "G_GRAIN": 0,
-        "H_SEED": 0,
-        "UNKNOWN": 0,
-    }
 
     @rx.event
     def toggle_sop_step(self, step_number: int):
@@ -128,86 +113,79 @@ class FormulationState(rx.State):
                     self.error_message = f"Database setup is incomplete. Missing: {', '.join(missing_tables)}. Please run the setup script."
                     self.is_generating = False
                 return
-            logging.info(
-                f"Fetching classified ingredients for '{self.selected_recipe_name}'"
-            )
-            classified_recipe = get_recipe_with_classified_ingredients(
-                self.selected_recipe_name
-            )
-            async with self:
-                self.ingredient_distribution = get_ingredient_class_distribution(
-                    self.selected_recipe_name
-                )
-                logging.info(
-                    f"Ingredient class distribution: {self.ingredient_distribution}"
-                )
-            if not classified_recipe:
+            recipe_data = supabase_client.fetch_recipe(self.selected_recipe_name)
+            if not recipe_data:
                 async with self:
-                    self.error_message = f"Could not find or process recipe '{self.selected_recipe_name}'."
+                    self.error_message = (
+                        f"Recipe '{self.selected_recipe_name}' not found."
+                    )
+                    self.is_generating = False
+                return
+            ingredients_str = recipe_data.get("Ingredients", "")
+            logging.info(f"Parsing ingredients string: {ingredients_str}")
+            parsed_ings = [
+                ing.strip() for ing in ingredients_str.split(",") if ing.strip()
+            ]
+            total_recipe_mass = len(parsed_ings)
+            if total_recipe_mass == 0:
+                async with self:
+                    self.error_message = (
+                        "Could not parse ingredients or masses are zero."
+                    )
                     self.is_generating = False
                 return
             classified_ingredients_with_mass = []
             all_ingredients: list[RecipeIngredient] = []
-            formulation_warnings = classified_recipe.get("warnings", [])
-            if classified_recipe.get("total_mass_grams", 0) > 0:
-                logging.info(
-                    "Using pre-classified ingredients with defined quantities."
-                )
-                recipe_total_mass = classified_recipe["total_mass_grams"]
-                scaling_factor = self.batch_size_kg * 1000 / recipe_total_mass
-                for ing in classified_recipe["ingredients"]:
-                    scaled_mass_g = ing["quantity_grams"] * scaling_factor
-                    classified_data = classify_ingredient(ing["canonical_name"])
+            formulation_warnings = [
+                "Warning: Ingredient masses are estimated with equal weight distribution."
+            ]
+            import re
+
+            @rx.event
+            def clean_ingredient_name(ing_str: str) -> str:
+                ing_str = re.sub("^\\d+/\\d+\\s*", "", ing_str).strip()
+                ing_str = re.sub("^\\d+\\s*", "", ing_str).strip()
+                units = ["cup", "cups", "gram", "grams", "g", "kg", "tbsp", "tsp"]
+                for unit in units:
+                    ing_str = re.sub(
+                        f"^({unit})s?\\s*", "", ing_str, flags=re.IGNORECASE
+                    ).strip()
+                return ing_str.split("(")[0].strip()
+
+            for ing_string in parsed_ings:
+                try:
+                    name = clean_ingredient_name(ing_string)
+                    if not name:
+                        continue
+                    mass_g = self.batch_size_kg * 1000 / total_recipe_mass
+                    classified_data = classify_ingredient(name)
                     all_ingredients.append(
                         {
-                            "name": (ing["name"] or ing["canonical_name"]).capitalize(),
-                            "mass_g": round(scaled_mass_g, 2),
+                            "name": name.capitalize(),
+                            "mass_g": round(mass_g, 2),
                             "classified_data": classified_data,
                         }
                     )
                     if classified_data:
-                        classified_data["mass_g"] = scaled_mass_g
+                        classified_data["mass_g"] = mass_g
                         classified_ingredients_with_mass.append(classified_data)
-            else:
-                logging.warning(
-                    "No pre-defined quantities. Falling back to estimation."
-                )
-                formulation_warnings.append(
-                    "Warning: Ingredient masses are estimated with equal weight distribution due to missing recipe data."
-                )
-                async with self:
-                    self.error_message = "Recipe data is incomplete. Could not determine ingredient quantities."
-                    self.is_generating = False
-                return
-            if not classified_ingredients_with_mass:
-                async with self:
-                    self.error_message = "Could not classify any ingredients for the formulation. Check ingredient_master table."
-                    self.is_generating = False
-                return
+                    else:
+                        formulation_warnings.append(f"Unclassified ingredient: {name}")
+                except Exception as e:
+                    logging.exception(f"Error parsing ingredient '{ing_string}': {e}")
+                    formulation_warnings.append(
+                        f"Could not parse ingredient: {ing_string}"
+                    )
             properties = calculate_all_properties(
                 classified_ingredients_with_mass, self.batch_size_kg * 1000
             )
             sop, sop_warnings = generate_sop(classified_ingredients_with_mass)
-            gelato_constants = supabase_client.fetch_gelato_science_constants()
-            thresholds = supabase_client.fetch_validation_thresholds()
             validation = (
-                validate_formulation_scientifically(
-                    properties,
-                    classified_ingredients_with_mass,
-                    sop,
-                    thresholds,
-                    gelato_constants,
-                )
-                if properties and thresholds and gelato_constants
+                validate_formulation(properties, classified_ingredients_with_mass)
+                if properties
                 else None
             )
-            if not thresholds or not gelato_constants:
-                formulation_warnings.append(
-                    "Could not fetch scientific validation constants from database."
-                )
             formulation_warnings.extend(sop_warnings)
-            if validation and validation.get("recommendations"):
-                formulation_warnings.extend(validation["recommendations"])
             async with self:
                 self.formulation_result = {
                     "sweet_name": self.selected_recipe_name,
@@ -216,7 +194,7 @@ class FormulationState(rx.State):
                     "properties": properties,
                     "sop": sop,
                     "validation": validation,
-                    "warnings": list(set(formulation_warnings)),
+                    "warnings": formulation_warnings,
                 }
                 self.is_generating = False
         except Exception as e:

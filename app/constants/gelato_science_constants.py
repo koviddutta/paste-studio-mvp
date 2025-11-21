@@ -1,0 +1,54 @@
+"""Gelato Science Constants - Source: FICSI + IDF Papers"""
+
+DEFAULT_BATCH_SIZE_GRAMS = 1000
+SWEET_PERCENT_DEFAULT = 18.0
+SWEET_PERCENT_MIN = 14.0
+SWEET_PERCENT_MAX = 24.0
+AFP_VALUES = {
+    "SUCROSE": 100,
+    "DEXTROSE": 190,
+    "FRUCTOSE": 190,
+    "INVERT_SUGAR": 190,
+    "GLUCOSE_SYRUP_DE40": 80,
+    "LACTOSE": 100,
+    "MALTODEXTRIN": 30,
+}
+SWEETENING_POWER = {
+    "SUCROSE": 100,
+    "DEXTROSE": 70,
+    "FRUCTOSE": 170,
+    "INVERT_SUGAR": 130,
+    "GLUCOSE_SYRUP_DE40": 30,
+    "MALTODEXTRIN": 15,
+    "LACTOSE": 16,
+    "HONEY": 130,
+}
+MSNF_CONTENT = {
+    "SKIM_MILK_POWDER": 97.0,
+    "WHOLE_MILK_POWDER": 70.0,
+    "CONDENSED_MILK": 20.0,
+    "KHOA": 65.0,
+    "CREAM_35": 5.5,
+    "MILK_WHOLE": 9.0,
+    "MILK_SKIM": 9.0,
+}
+FAT_CONTENT = {
+    "GHEE": 99.5,
+    "BUTTER": 82.0,
+    "CREAM_HEAVY": 36.0,
+    "CREAM_FRESH": 25.0,
+    "WHOLE_MILK_POWDER": 26.0,
+    "COCONUT_OIL": 100.0,
+    "KHOA": 23.0,
+}
+STABILIZER_MIN_PCT = 0.2
+STABILIZER_MAX_PCT = 0.5
+STABILIZER_TARGET_PCT = 0.35
+AW_TARGET_MIN = 0.68
+AW_TARGET_MAX = 0.75
+AW_DEFAULT = 0.72
+COMPENSATION_EFFECTIVENESS = {
+    "GLYCEROL": "ADVISORY: Very high AFP (~220). Use strictly <10g/kg to avoid off-taste.",
+    "INULIN": "ADVISORY: Fat mimetic. Adds solids without sweetness. Good for structure.",
+    "MALTODEXTRIN": "ADVISORY: Bulking agent. Low sweetness, low AFP. Hardens texture.",
+}
