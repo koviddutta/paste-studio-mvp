@@ -4,7 +4,7 @@ Placeholder for future implementation of custom sweet profiling and categorizati
 """
 
 from __future__ import annotations
-from app.database.supabase_client import get_client
+from app.database.supabase_client import get_supabase
 from .domain import SweetProfile
 
 
@@ -65,11 +65,11 @@ def build_sweet_profile_from_db(sweet_id: int) -> SweetProfile:
         target_fat_min, target_fat_max,
         target_msnf_min, target_msnf_max,
         target_solids_min, target_solids_max,
-        target_aw_min, target_aw_max,
+    target_aw_min, target_aw_max,
         base_template_id
     Adapt column names where yours differ.
     """
-    supabase = get_client()
+    supabase = get_supabase()
     comp_resp = (
         supabase.table("sweet_compositions")
         .select("*")

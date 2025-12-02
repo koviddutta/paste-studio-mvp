@@ -4,12 +4,12 @@ Placeholder for future implementation.
 """
 
 from __future__ import annotations
-from app.database.supabase_client import get_client
+from app.database.supabase_client import get_supabase
 from .domain import BaseTemplateComposition, Ingredient
 
 
 def _fetch_base_template_row(template_id: int) -> dict:
-    supabase = get_client()
+    supabase = get_supabase()
     resp = (
         supabase.table("base_formulation_templates")
         .select("*")
@@ -34,7 +34,7 @@ def _fetch_ingredient_composition(name: str) -> Ingredient:
       - fat_pct
       - msnf_pct (or derivable later)
     """
-    supabase = get_client()
+    supabase = get_supabase()
     resp = (
         supabase.table("ingredients_master")
         .select("*")

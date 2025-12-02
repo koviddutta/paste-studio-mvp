@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 from .domain import SweetProfile, BaseTemplateComposition, DesignedPaste, PasteMetrics
 from .metrics import compute_paste_metrics
-from .validation_engine import validate_paste
+from .validation import validate_paste
 
 
 @dataclass

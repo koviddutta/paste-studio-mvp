@@ -14,7 +14,7 @@ def build_gulab_jamun_example():
         sugars_pct=51.9,
         fat_pct=6.0,
         msnf_pct=8.0,
-        other_solids_pct=4.1,
+        other_pct=4.1,
         water_pct=30.0,
     )
     base_lookup = {
@@ -24,7 +24,7 @@ def build_gulab_jamun_example():
             sugars_pct=0.0,
             fat_pct=25.0,
             msnf_pct=6.8,
-            other_solids_pct=0.0,
+            other_pct=0.0,
             water_pct=68.2,
         ),
         "Skim Milk Powder": Ingredient(
@@ -33,7 +33,7 @@ def build_gulab_jamun_example():
             sugars_pct=0.0,
             fat_pct=1.0,
             msnf_pct=93.0,
-            other_solids_pct=0.0,
+            other_pct=0.0,
             water_pct=3.5,
         ),
         "Glucose Syrup DE40": Ingredient(
@@ -42,7 +42,7 @@ def build_gulab_jamun_example():
             sugars_pct=80.0,
             fat_pct=0.0,
             msnf_pct=0.0,
-            other_solids_pct=0.0,
+            other_pct=0.0,
             water_pct=20.0,
         ),
         "Ghee": Ingredient(
@@ -51,7 +51,7 @@ def build_gulab_jamun_example():
             sugars_pct=0.0,
             fat_pct=100.0,
             msnf_pct=0.0,
-            other_solids_pct=0.0,
+            other_pct=0.0,
             water_pct=0.0,
         ),
     }
