@@ -2,24 +2,64 @@
 Validation logic for the Paste Core module.
 Placeholder for future implementation.
 """
+from __future__ import annotations
 
-from .domain import PasteComposition, PasteValidation
-from .water_activity import classify_aw
+from typing import List
+from .domain import PasteMetrics, SweetProfile, ValidationReport, ParameterStatus
 
 
-def validate_paste(comp: PasteComposition) -> PasteValidation:
-    notes: list[str] = []
-    solids_ok = 60.0 <= comp.total_solids_pct <= 80.0
-    if not solids_ok:
-        notes.append(
-            f"Total solids {comp.total_solids_pct:.1f}% outside 60–80% window (too low → runny / perishable, too high → hard/glassy)."
+def validate_paste(
+    metrics: PasteMetrics,
+    formulation_type: str,
+    sweet_profile: SweetProfile | None = None,
+) -> ValidationReport:
+    """
+    TEMPORARY VALIDATOR:
+      - Accepts metrics + formulation_type + sweet_profile
+      - Returns a ValidationReport with simple checks
+    Replace this later with the DB-driven version.
+    """
+
+    params: List[ParameterStatus] = []
+
+    def add_param(name: str, value: float, optimal_min: float, optimal_max: float):
+        if optimal_min <= value <= optimal_max:
+            status = "OPTIMAL"
+            msg = f"{name} {value:.2f} within optimal {optimal_min}-{optimal_max}."
+            dist = 0.0
+        else:
+            status = "ACCEPTABLE"
+            center = 0.5 * (optimal_min + optimal_max)
+            dist = abs(value - center)
+            msg = f"{name} {value:.2f} outside optimal {optimal_min}-{optimal_max}."
+
+        params.append(
+            ParameterStatus(
+                name=name,
+                value=value,
+                status=status,
+                message=msg,
+                distance_from_optimal=dist,
+            )
         )
-    aw_status = classify_aw(comp.water_activity)
-    aw_ok = "Target Range" in aw_status
-    if not aw_ok:
-        notes.append(f"Water activity {comp.water_activity:.3f}: {aw_status}")
-    if solids_ok and aw_ok:
-        notes.append(
-            "Formulation is within basic solids and Aw targets for a spreadable, stable paste."
-        )
-    return PasteValidation(is_solid_range_ok=solids_ok, is_aw_ok=aw_ok, notes=notes)
+
+    # Temporary placeholder rules (replace later with DB rules)
+    add_param("sugar_pct", metrics.sugar_pct, 30.0, 50.0)
+    add_param("fat_pct", metrics.fat_pct, 8.0, 25.0)
+    add_param("solids_pct", metrics.solids_pct, 70.0, 80.0)
+    add_param("water_activity", metrics.water_activity, 0.68, 0.75)
+
+    # Overall status
+    overall = "GREEN"
+    key_recs = []
+
+    for p in params:
+        if p.status != "OPTIMAL":
+            overall = "AMBER"
+            key_recs.append(p.message)
+
+    return ValidationReport(
+        parameters=params,
+        overall_status=overall,
+        key_recommendations=key_recs,
+    )
