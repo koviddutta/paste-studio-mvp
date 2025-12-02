@@ -80,7 +80,9 @@ class PasteValidation:
         return any((r.status == "FAIL" for r in self.results))
 
     from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
+
+
+from typing import Optional
 
 
 @dataclass
@@ -89,6 +91,7 @@ class Ingredient:
     Generic ingredient model with composition expressed as percentages (0–100).
     quantity_g is per-batch amount when used in a formulation.
     """
+
     name: str
     quantity_g: float = 0.0
     water_pct: float = 0.0
@@ -96,7 +99,6 @@ class Ingredient:
     fat_pct: float = 0.0
     msnf_pct: float = 0.0
     other_pct: float = 0.0
-    # Optional: AFP, POD etc. per 100 g if you want to cache
     afp_per_100g: float = 0.0
     pod_per_100g: float = 0.0
     de_equivalent: float = 0.0
@@ -110,32 +112,27 @@ class SweetProfile:
     - target paste spec from sweet_paste_profiles
     - formulation family for validation thresholds
     """
+
     sweet_id: int
     sweet_name: str
-    category: str                # e.g. "dairy_fried_sugary", "nut_rich"
-    formulation_type: str        # maps to validation families: "eggs_nuts", "pure_dairy", etc.
-
-    # per-100 g sweet composition
+    category: str
+    formulation_type: str
     water_pct: float
     sugars_pct: float
     fat_pct: float
     msnf_pct: float
     other_pct: float
     afp_per_100g: float
-
-    # paste spec inputs from sweet_paste_profiles
-    sweet_pct_min: float         # as percentage of paste weight, e.g. 40.0
+    sweet_pct_min: float
     sweet_pct_max: float
     sweet_pct_default: float
-
-    target_sugar_pct_range: Tuple[float, float]
-    target_fat_pct_range: Tuple[float, float]
-    target_msnf_pct_range: Tuple[float, float]
-    target_solids_pct_range: Tuple[float, float]
-    target_aw_range: Tuple[float, float]
-
+    target_sugar_pct_range: tuple[float, float]
+    target_fat_pct_range: tuple[float, float]
+    target_msnf_pct_range: tuple[float, float]
+    target_solids_pct_range: tuple[float, float]
+    target_aw_range: tuple[float, float]
     base_template_id: int
-    intensity_tag: str = "medium"  # "strong", "medium", "weak"
+    intensity_tag: str = "medium"
 
 
 @dataclass
@@ -144,6 +141,7 @@ class BaseTemplateComposition:
     Aggregated composition of the base formulation template as if it were a single ingredient.
     All values are per-100 g of the base.
     """
+
     template_id: int
     name: str
     water_pct: float
@@ -154,8 +152,7 @@ class BaseTemplateComposition:
     afp_per_100g: float
     pod_per_100g: float
     de_equivalent: float
-    # Optional: keep the detailed ingredient breakdown if needed
-    ingredient_breakdown: Dict[str, float] = field(default_factory=dict)  # name -> pct
+    ingredient_breakdown: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -164,19 +161,18 @@ class PasteMetrics:
     Extended metrics for the designed paste, beyond basic composition.
     All values are per-100 g paste unless otherwise noted.
     """
+
     sugar_pct: float
     fat_pct: float
     msnf_pct: float
     other_pct: float
     solids_pct: float
     water_pct: float
-
     afp_total: float
     pod_sweetness: float
     de_total: float
     pac_total: float
     sp_total: float
-
     water_activity: float
 
 
@@ -184,16 +180,16 @@ class PasteMetrics:
 class ParameterStatus:
     name: str
     value: float
-    status: str             # "CRITICAL", "ACCEPTABLE", "OPTIMAL"
+    status: str
     message: str
     distance_from_optimal: float
 
 
 @dataclass
 class ValidationReport:
-    parameters: List[ParameterStatus] = field(default_factory=list)
-    overall_status: str = "UNKNOWN"     # "GREEN", "AMBER", "RED"
-    key_recommendations: List[str] = field(default_factory=list)
+    parameters: list[ParameterStatus] = field(default_factory=list)
+    overall_status: str = "UNKNOWN"
+    key_recommendations: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -201,14 +197,12 @@ class DesignedPaste:
     """
     Final output of the PasteDesigner.
     """
+
     sweet_profile: SweetProfile
     sweet_pct: float
     base_pct: float
     base_template: BaseTemplateComposition
     batch_weight_g: float
-
     metrics: PasteMetrics
     validation: Optional[ValidationReport] = None
-
-    # Optional: full ingredient breakdown when we expand base into actual ingredients
-    ingredient_breakdown: Dict[str, float] = field(default_factory=dict)  # name -> grams
+    ingredient_breakdown: dict[str, float] = field(default_factory=dict)
