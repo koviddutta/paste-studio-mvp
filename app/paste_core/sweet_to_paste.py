@@ -71,5 +71,5 @@ def formulate_paste(
                 )
             )
     comp = calculate_paste_composition(recipe)
-    validation = validate_paste(comp)
+    validation = validate_paste(comp, formulation_type="default", sweet_profile=None)
     return {"ingredients": recipe, "composition": comp, "validation": validation}
