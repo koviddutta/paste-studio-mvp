@@ -100,3 +100,53 @@ def _extract_ingredients_map(base_ingredients: dict | list) -> dict[str, float]:
             ingredients_map[str(name)] = float(parts)
         return ingredients_map
     raise ValueError(f"Unsupported base_ingredients type: {type(base_ingredients)}")
+
+
+def compute_base_template_from_db(template_id: int) -> BaseTemplateComposition:
+    """
+    Loads a base formulation template from the database (by id)
+    and computes its aggregate composition (per 100g of base).
+    """
+    row = _fetch_base_template_row(template_id)
+    template_name = row.get("name") or f"Base Template #{template_id}"
+    base_ingredients_raw = row.get("base_ingredients")
+    ingredients_map = _extract_ingredients_map(base_ingredients_raw)
+    if not ingredients_map:
+        raise ValueError(f"Base template {template_id} has no ingredients.")
+    total_parts = sum(ingredients_map.values())
+    if total_parts <= 0:
+        raise ValueError(f"Base template {template_id} total parts <= 0")
+    agg_water = 0.0
+    agg_sugars = 0.0
+    agg_fat = 0.0
+    agg_msnf = 0.0
+    agg_other = 0.0
+    agg_afp = 0.0
+    agg_pod = 0.0
+    agg_de = 0.0
+    breakdown_pct = {}
+    for ing_name, parts in ingredients_map.items():
+        fraction = parts / total_parts
+        breakdown_pct[ing_name] = round(fraction * 100, 2)
+        ing = _fetch_ingredient_composition(ing_name)
+        agg_water += ing.water_pct * fraction
+        agg_sugars += ing.sugars_pct * fraction
+        agg_fat += ing.fat_pct * fraction
+        agg_msnf += ing.msnf_pct * fraction
+        agg_other += ing.other_pct * fraction
+        agg_afp += ing.afp_per_100g * fraction
+        agg_pod += ing.pod_per_100g * fraction
+        agg_de += ing.de_equivalent * fraction
+    return BaseTemplateComposition(
+        template_id=template_id,
+        name=template_name,
+        water_pct=round(agg_water, 2),
+        sugars_pct=round(agg_sugars, 2),
+        fat_pct=round(agg_fat, 2),
+        msnf_pct=round(agg_msnf, 2),
+        other_pct=round(agg_other, 2),
+        afp_per_100g=round(agg_afp, 1),
+        pod_per_100g=round(agg_pod, 1),
+        de_equivalent=round(agg_de, 1),
+        ingredient_breakdown=breakdown_pct,
+    )
