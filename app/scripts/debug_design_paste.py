@@ -9,7 +9,7 @@ from app.services.design_paste_from_sweet import design_paste_for_sweet_id
 def main():
     logging.basicConfig(level=logging.INFO)
     print("----------------------------------------------------------------")
-    print(" DEBUG SCRIPT: Design Paste for Sweet ID = 1")
+    print(" DEBUG SCRIPT: Design Paste")
     print("----------------------------------------------------------------")
     try:
         result = design_paste_for_sweet_id(1)

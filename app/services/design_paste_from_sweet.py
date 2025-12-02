@@ -5,8 +5,8 @@ from app.paste_core.domain import DesignedPaste
 
 
 def design_paste_for_sweet_id(
-    sweet_id: int, batch_weight_g: float = 1000.0
-) -> DesignedPaste:
+    sweet_id: int, batch_weight_g: float = 1000.0, sweet_step_pct: float = 2.0
+):
     """
     Design a paste formulation for a specific sweet ID.
 
@@ -22,6 +22,7 @@ def design_paste_for_sweet_id(
         sweet_profile=sweet_profile,
         base_template=base_template,
         batch_weight_g=batch_weight_g,
+        sweet_step_pct=sweet_step_pct,
     )
-    designed_paste = designer.design()
-    return designed_paste
+    designed = designer.design()
+    return designed
