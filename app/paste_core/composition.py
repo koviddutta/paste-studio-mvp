@@ -44,7 +44,7 @@ def calculate_paste_composition(ingredients: list[Ingredient]) -> PasteCompositi
     solids_pct = sugars_pct + fat_pct + msnf_pct + other_pct
     aw = estimate_water_activity(
         water_g=totals["water_g"],
-        solids_g=totals["sugars_g"]
+        sugar_like_solids_g=totals["sugars_g"]
         + totals["fat_g"]
         + totals["msnf_g"]
         + totals["other_g"],
