@@ -46,7 +46,7 @@ def formulate_paste(
             sugars_pct=sweet.sugars_pct,
             fat_pct=sweet.fat_pct,
             msnf_pct=sweet.msnf_pct,
-            other_solids_pct=sweet.other_solids_pct,
+            other_pct=sweet.other_pct,
             water_pct=sweet.water_pct,
         )
     )
@@ -56,7 +56,7 @@ def formulate_paste(
         proto = base_composition_lookup.get(name)
         if proto is None:
             recipe.append(
-                Ingredient(name=name, quantity_g=round(qty, 2), other_solids_pct=100.0)
+                Ingredient(name=name, quantity_g=round(qty, 2), other_pct=100.0)
             )
         else:
             recipe.append(
@@ -66,7 +66,7 @@ def formulate_paste(
                     sugars_pct=proto.sugars_pct,
                     fat_pct=proto.fat_pct,
                     msnf_pct=proto.msnf_pct,
-                    other_solids_pct=proto.other_solids_pct,
+                    other_pct=proto.other_pct,
                     water_pct=proto.water_pct,
                 )
             )

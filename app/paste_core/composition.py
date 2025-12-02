@@ -22,7 +22,7 @@ def _aggregate_masses(ingredients: list[Ingredient]) -> dict[str, float]:
         totals["sugars_g"] += q * ing.sugars_pct / 100.0
         totals["fat_g"] += q * ing.fat_pct / 100.0
         totals["msnf_g"] += q * ing.msnf_pct / 100.0
-        totals["other_g"] += q * ing.other_solids_pct / 100.0
+        totals["other_g"] += q * ing.other_pct / 100.0
         if ing.water_pct > 0:
             totals["water_g"] += q * ing.water_pct / 100.0
     if totals["water_g"] == 0.0:
@@ -50,11 +50,11 @@ def calculate_paste_composition(ingredients: list[Ingredient]) -> PasteCompositi
         + totals["other_g"],
     )
     return PasteComposition(
+        total_weight_g=round(total_g, 2),
         total_sugars_pct=round(sugars_pct, 2),
         total_fat_pct=round(fat_pct, 2),
         total_msnf_pct=round(msnf_pct, 2),
         total_other_pct=round(other_pct, 2),
-        total_solids_pct=round(solids_pct, 2),
-        water_pct=round(water_pct, 2),
+        total_water_pct=round(water_pct, 2),
         water_activity=round(aw, 3),
     )

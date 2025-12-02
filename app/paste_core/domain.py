@@ -2,39 +2,19 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class Ingredient:
-    """
-    Represents a single ingredient in a formulation with its nutritional breakdown.
-    All percentages should ideally sum to ~100% (excluding water which is calculated or explicit).
-    """
-
-    name: str
-    quantity_g: float
-    sugars_pct: float = 0.0
-    fat_pct: float = 0.0
-    msnf_pct: float = 0.0
-    other_solids_pct: float = 0.0
-    water_pct: float = 0.0
-
-    @property
-    def total_solids_pct(self) -> float:
-        """Calculates total solids percentage."""
-        return self.sugars_pct + self.fat_pct + self.msnf_pct + self.other_solids_pct
-
-
-@dataclass
 class PasteComposition:
     """
     Represents the calculated chemical composition of the final paste mixture.
     Used for property calculations (viscosity, aw, shelf-life).
     """
 
-    total_weight_g: float
-    total_fat_pct: float
-    total_sugars_pct: float
-    total_msnf_pct: float
-    total_other_solids_pct: float
-    total_water_pct: float
+    total_weight_g: float = 0.0
+    total_fat_pct: float = 0.0
+    total_sugars_pct: float = 0.0
+    total_msnf_pct: float = 0.0
+    total_other_pct: float = 0.0
+    total_water_pct: float = 0.0
+    water_activity: float = 0.0
 
     @property
     def total_solids_pct(self) -> float:
@@ -43,8 +23,28 @@ class PasteComposition:
             self.total_fat_pct
             + self.total_sugars_pct
             + self.total_msnf_pct
-            + self.total_other_solids_pct
+            + self.total_other_pct
         )
+
+    @property
+    def sugar_pct(self) -> float:
+        return self.total_sugars_pct
+
+    @property
+    def fat_pct(self) -> float:
+        return self.total_fat_pct
+
+    @property
+    def msnf_pct(self) -> float:
+        return self.total_msnf_pct
+
+    @property
+    def other_pct(self) -> float:
+        return self.total_other_pct
+
+    @property
+    def solids_pct(self) -> float:
+        return self.total_solids_pct
 
 
 @dataclass
