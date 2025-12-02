@@ -206,3 +206,43 @@ class DesignedPaste:
     metrics: PasteMetrics
     validation: Optional[ValidationReport] = None
     ingredient_breakdown: dict[str, float] = field(default_factory=dict)
+
+    from typing import Dict, List, Tuple, Optional
+# ... your existing imports and dataclasses ...
+
+
+@dataclass
+class GelatoBaseProfile:
+    """
+    Represents a finished gelato base (without paste).
+
+    All composition values are in % of mix weight.
+    Ranges are the allowed finished ranges for that base.
+    """
+    name: str
+
+    sugar_pct: float
+    fat_pct: float
+    solids_pct: float
+
+    sugar_min: float
+    sugar_max: float
+    fat_min: float
+    fat_max: float
+    solids_min: float
+    solids_max: float
+
+    # Optional fields if/when you wire AFP/PAC/SP from DB:
+    afp_total: float = 0.0
+    afp_min: float = 0.0
+    afp_max: float = 0.0
+
+
+@dataclass
+class PasteInfusionRecommendation:
+    base_name: str
+    p_science_max: float         # maximum % paste allowed by science constraints
+    p_recommended_max: float     # capped by flavour intensity
+    p_recommended_default: float # typical working point
+    science_limits: Dict[str, float]  # constraint -> p_limit
+    commentary: List[str] = field(default_factory=list)
