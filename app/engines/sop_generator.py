@@ -1,86 +1,119 @@
-import logging
-from typing import TypedDict, Optional, Any
-from app.database import supabase_client
-from app.engines.ingredient_classifier import IngredientData
+from app.database.gelato_university_client import GelatoUniversityClient
 
 
-class SOPStep(TypedDict):
-    """Represents a single step in the Standard Operating Procedure."""
-
-    step: int
-    title: str
-    action: str
-    temperature_c: Optional[int]
-    time_minutes: Optional[int]
-    equipment: Optional[str]
-    science_reason: Optional[str]
-
-
-def generate_sop(
-    classified_ingredients: list[IngredientData],
-) -> tuple[list[SOPStep], list[str]]:
-    """Generates a detailed Standard Operating Procedure (SOP) based on ingredient classes.
-
-    This function orchestrates the SOP generation by fetching processing rules for each
-    ingredient class present in the recipe, sequencing them logically, and adding critical
-    safety checks like pasteurization.
-
-    Args:
-        classified_ingredients: A list of classified ingredient data dictionaries.
-
-    Returns:
-        A tuple containing the list of SOP steps and a list of validation warnings.
+class SOPGenerator:
     """
-    warnings = []
-    if not classified_ingredients:
-        return ([], ["Cannot generate SOP: No ingredients provided."])
-    ingredient_classes = sorted(
-        list(
+    Generates Standard Operating Procedures based on ingredient classes.
+    """
+
+    @staticmethod
+    async def generate_sop(classified_ingredients: list[dict]) -> list[dict]:
+        """
+        Creates a step-by-step SOP.
+        """
+        steps = []
+        step_counter = 1
+        groups = {"A": [], "B": [], "C": [], "D": [], "E": [], "F": []}
+        for ing in classified_ingredients:
+            raw_class = ing.get("processing_class", "F")
+            p_class = raw_class.split("_")[0] if raw_class else "F"
+            if p_class in groups:
+                groups[p_class].append(ing["name"])
+            else:
+                groups["F"].append(ing["name"])
+        steps.append(
             {
-                ing["class_name"]
-                for ing in classified_ingredients
-                if ing.get("class_name")
+                "step": step_counter,
+                "phase": "Preparation",
+                "action": "Weigh all ingredients precisely.",
+                "details": "Ensure all raw materials are ready.",
+                "temp": "20-25°C",
             }
         )
-    )
-    all_rules: dict[str, dict[str, str | int | float | None]] = {}
-    for iclass in ingredient_classes:
-        rules = supabase_client.fetch_processing_rules(iclass)
-        if not rules:
-            warnings.append(
-                f"No processing rules found for ingredient class '{iclass}'."
-            )
-        for rule in rules:
-            rule_key = f"{rule['ingredient_class']}_{rule['step_order']}"
-            all_rules[rule_key] = rule
-    sorted_rule_keys = sorted(all_rules.keys())
-    sop: list[SOPStep] = []
-    step_counter = 1
-    for key in sorted_rule_keys:
-        rule = all_rules[key]
-        sop_step: SOPStep = {
-            "step": step_counter,
-            "title": f"Process: {rule['ingredient_class'].split('_')[-1]}",
-            "action": rule.get("action", "N/A"),
-            "temperature_c": rule.get("temperature_c"),
-            "time_minutes": rule.get("time_minutes"),
-            "equipment": rule.get("equipment"),
-            "science_reason": rule.get("science_reason"),
-        }
-        sop.append(sop_step)
         step_counter += 1
-    if "A_DAIRY" in ingredient_classes:
-        pasteurization_found = any(
-            (
-                step["action"]
-                and "pasteurize" in step["action"].lower()
-                and (step.get("temperature_c", 0) >= 72)
-                for step in sop
+        if groups["B"]:
+            rule = await GelatoUniversityClient.get_processing_rules("B")
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Nut Processing",
+                    "action": f"Roast {', '.join(groups['B'])}.",
+                    "details": f"Roast at {rule.get('min_temp')}-{rule.get('max_temp')}°C to develop flavor.",
+                    "temp": f"{rule.get('max_temp')}°C",
+                }
             )
+            step_counter += 1
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Nut Processing",
+                    "action": "Grind to fine paste.",
+                    "details": "Particle size should be < 20 microns.",
+                    "temp": "40-50°C",
+                }
+            )
+            step_counter += 1
+        base_ings = groups["A"] + groups["C"] + groups["D"]
+        if base_ings:
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Base Formulation",
+                    "action": "Combine wet ingredients and sugars.",
+                    "details": f"Mix {', '.join(base_ings)} in the kettle.",
+                    "temp": "25°C",
+                }
+            )
+            step_counter += 1
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Heating",
+                    "action": "Heat mixture to dissolve solids.",
+                    "details": "Agitate continuously.",
+                    "temp": "65°C",
+                }
+            )
+            step_counter += 1
+        if groups["E"]:
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Stabilization",
+                    "action": f"Add {', '.join(groups['E'])} mixed with some sugar.",
+                    "details": "Ensure lump-free dispersion.",
+                    "temp": "65°C",
+                }
+            )
+            step_counter += 1
+        steps.append(
+            {
+                "step": step_counter,
+                "phase": "Pasteurization",
+                "action": "Heat to pasteurization temperature.",
+                "details": "Hold for 15 seconds to ensure safety.",
+                "temp": "85°C",
+            }
         )
-        if not pasteurization_found:
-            warnings.append(
-                "Safety Warning: Dairy is present but no pasteurization step (>=72°C) was found."
+        step_counter += 1
+        if groups["F"]:
+            steps.append(
+                {
+                    "step": step_counter,
+                    "phase": "Flavoring",
+                    "action": f"Cool down and add {', '.join(groups['F'])}.",
+                    "details": "Add volatile aromatics at lower temperature to prevent loss.",
+                    "temp": "<45°C",
+                }
             )
-    logging.info(f"Generated SOP with {len(sop)} steps and {len(warnings)} warnings.")
-    return (sop, warnings)
+            step_counter += 1
+        steps.append(
+            {
+                "step": step_counter,
+                "phase": "Packaging",
+                "action": "Fill into sterilized jars.",
+                "details": "Hot fill if possible, or rapid cool then fill.",
+                "temp": "40°C",
+            }
+        )
+        return steps

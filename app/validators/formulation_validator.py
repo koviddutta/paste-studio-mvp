@@ -1,119 +1,84 @@
-from typing import TypedDict, Literal
-from app.calculators.property_calculator import FormulationProperties
-from app.engines.ingredient_classifier import IngredientData
-
-ValidationStatus = Literal["PASS", "WARNING", "FAIL"]
+from app.constants.gelato_science_constants import GelatoConstants
 
 
-class ValidationResult(TypedDict):
-    """Represents the result of a formulation validation check."""
-
-    status: ValidationStatus
-    message: str
-
-
-class FullValidationReport(TypedDict):
-    """Contains the overall validation status and a list of all checks."""
-
-    overall_status: ValidationStatus
-    results: list[ValidationResult]
-
-
-def validate_formulation(
-    properties: FormulationProperties, classified_ingredients: list[IngredientData]
-) -> FullValidationReport:
-    """Runs a series of validation checks on the formulation properties and composition.
-
-    Args:
-        properties: The calculated properties of the formulation.
-        classified_ingredients: A list of ingredients with their classifications.
-
-    Returns:
-        A full validation report with an overall status and detailed results.
+class FormulationValidator:
     """
-    results: list[ValidationResult] = []
-    overall_status: ValidationStatus = "PASS"
-    aw = properties.get("water_activity")
-    if aw is not None:
-        if not 0.68 <= aw <= 0.75:
-            status: ValidationStatus = "FAIL" if aw > 0.85 else "WARNING"
+    Validates the safety and quality of the formulation.
+    """
+
+    @staticmethod
+    def validate_formulation(data: dict) -> list[dict]:
+        """
+        Returns a list of validation results (Pass/Warning/Fail).
+        """
+        results = []
+        props = data.get("properties", {})
+        comp = data.get("composition", {})
+        aw = props.get("water_activity", 1.0)
+        if GelatoConstants.AW_MIN_OPTIMAL <= aw <= GelatoConstants.AW_MAX_OPTIMAL:
             results.append(
                 {
-                    "status": status,
-                    "message": f"Water Activity is {aw:.3f}, outside the optimal range of 0.68-0.75. Shelf life is compromised.",
+                    "check": "Water Activity",
+                    "status": "PASS",
+                    "msg": f"Aw {aw} is optimal.",
                 }
             )
-            if status == "FAIL":
-                overall_status = "FAIL"
-            elif overall_status != "FAIL":
-                overall_status = "WARNING"
+        elif aw < GelatoConstants.AW_MIN_OPTIMAL:
+            results.append(
+                {
+                    "check": "Water Activity",
+                    "status": "WARNING",
+                    "msg": f"Aw {aw} is low. Paste may be hard.",
+                }
+            )
         else:
             results.append(
                 {
-                    "status": "PASS",
-                    "message": f"Water Activity is {aw:.3f}, within the optimal range.",
+                    "check": "Water Activity",
+                    "status": "FAIL",
+                    "msg": f"Aw {aw} is too high! Risk of spoilage.",
                 }
             )
-    sugar_pct = properties["composition_pct"].get("sugar", 0.0)
-    if not 20.0 <= sugar_pct <= 40.0:
-        results.append(
-            {
-                "status": "WARNING",
-                "message": f"Sugar content is {sugar_pct:.1f}%, outside the typical range of 20-40%.",
-            }
-        )
-        if overall_status != "FAIL":
-            overall_status = "WARNING"
-    else:
-        results.append(
-            {
-                "status": "PASS",
-                "message": f"Sugar content is {sugar_pct:.1f}%, within range.",
-            }
-        )
-    fat_pct = properties["composition_pct"].get("fat", 0.0)
-    if not 10.0 <= fat_pct <= 20.0:
-        results.append(
-            {
-                "status": "WARNING",
-                "message": f"Fat content is {fat_pct:.1f}%, outside the typical range of 10-20%.",
-            }
-        )
-        if overall_status != "FAIL":
-            overall_status = "WARNING"
-    else:
-        results.append(
-            {
-                "status": "PASS",
-                "message": f"Fat content is {fat_pct:.1f}%, within range.",
-            }
-        )
-    stabilizer_mass = sum(
-        (
-            ing.get("mass_g", 0.0)
-            for ing in classified_ingredients
-            if ing.get("class_name") == "E_STABILIZER"
-        )
-    )
-    total_mass = properties["composition"].get("total_g", 0.0)
-    if total_mass > 0:
-        stabilizer_pct = stabilizer_mass / total_mass * 100
-        if not 0.25 <= stabilizer_pct <= 0.5 and stabilizer_mass > 0:
+        fat = comp.get("fat", 0)
+        if GelatoConstants.FAT_MIN <= fat <= GelatoConstants.FAT_MAX:
             results.append(
                 {
+                    "check": "Fat Content",
+                    "status": "PASS",
+                    "msg": f"Fat {fat}% is within range.",
+                }
+            )
+        elif fat > GelatoConstants.FAT_MAX:
+            results.append(
+                {
+                    "check": "Fat Content",
                     "status": "WARNING",
-                    "message": f"Stabilizer content is {stabilizer_pct:.2f}%, outside the recommended range of 0.25-0.50%.",
+                    "msg": "High fat may cause separation.",
                 }
             )
-            if overall_status != "FAIL":
-                overall_status = "WARNING"
-        elif stabilizer_mass > 0:
+        else:
             results.append(
                 {
+                    "check": "Fat Content",
                     "status": "PASS",
-                    "message": f"Stabilizer content is {stabilizer_pct:.2f}%, within range.",
+                    "msg": "Fat content is acceptable.",
                 }
             )
-    if not results:
-        results.append({"status": "PASS", "message": "All checks passed."})
-    return {"overall_status": overall_status, "results": results}
+        sugar = comp.get("sugar", 0)
+        if sugar >= GelatoConstants.SUGAR_MIN:
+            results.append(
+                {
+                    "check": "Sugar Content",
+                    "status": "PASS",
+                    "msg": "Sugar adequate for preservation.",
+                }
+            )
+        else:
+            results.append(
+                {
+                    "check": "Sugar Content",
+                    "status": "FAIL",
+                    "msg": "Sugar too low for preservation!",
+                }
+            )
+        return results

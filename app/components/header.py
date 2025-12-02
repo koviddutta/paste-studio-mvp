@@ -2,37 +2,32 @@ import reflex as rx
 
 
 def header() -> rx.Component:
-    """Renders the application header."""
     return rx.el.header(
         rx.el.div(
-            rx.el.a(
-                rx.el.div(
-                    rx.icon("flask-conical", class_name="h-7 w-7 text-purple-600"),
-                    rx.el.span(
-                        "Formulation Studio",
-                        class_name="text-xl font-bold text-gray-800 tracking-tighter",
-                    ),
-                    class_name="flex items-center gap-3",
-                ),
-                href="/",
-            ),
             rx.el.div(
-                rx.el.a(
-                    "Docs",
-                    href="#",
-                    class_name="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors",
-                ),
-                rx.el.a(
-                    rx.icon(
-                        "github",
-                        class_name="h-5 w-5 text-gray-500 hover:text-gray-800 transition-colors",
-                    ),
-                    href="https://github.com/reflex-dev/reflex",
-                    target="_blank",
-                ),
-                class_name="flex items-center gap-4",
+                rx.icon("flask-conical", class_name="h-8 w-8 text-violet-600"),
+                rx.el.h1("Paste Studio", class_name="text-2xl font-bold text-gray-900"),
+                class_name="flex items-center gap-3",
             ),
-            class_name="flex items-center justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+            rx.el.nav(
+                rx.el.a(
+                    "Formulation",
+                    href="/",
+                    class_name="text-sm font-medium text-gray-700 hover:text-violet-600",
+                ),
+                rx.el.a(
+                    "Library",
+                    href="#",
+                    class_name="text-sm font-medium text-gray-500 cursor-not-allowed",
+                ),
+                rx.el.a(
+                    "Settings",
+                    href="#",
+                    class_name="text-sm font-medium text-gray-500 cursor-not-allowed",
+                ),
+                class_name="flex gap-6",
+            ),
+            class_name="container mx-auto px-4 h-16 flex items-center justify-between",
         ),
-        class_name="w-full border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-40",
+        class_name="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50",
     )

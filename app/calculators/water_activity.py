@@ -1,75 +1,54 @@
 import math
-from typing import TypedDict
 import logging
+from app.constants.gelato_science_constants import GelatoConstants
 
 
-class Composition(TypedDict):
-    """Represents the mass composition of a formulation."""
-
-    water_g: float
-    sugar_g: float
-    protein_g: float
-    fat_g: float
-    other_g: float
-    total_g: float
-
-
-MOLAR_MASS_WATER = 18.015
-MOLAR_MASS_SUGAR = 342.3
-MOLAR_MASS_PROTEIN = 1000
-
-
-def calculate_water_activity(
-    composition: Composition, constants: dict[str, float]
-) -> float | None:
-    """Calculates water activity (Aw) using the Norrish equation.
-
-    Args:
-        composition: A dictionary with the mass of water, sugar, and protein.
-        constants: A dictionary of formulation constants from the database.
-
-    Returns:
-        The calculated water activity (Aw) value, or None on error.
+class WaterActivityCalculator:
     """
-    k_sugar = constants.get("K_SUGAR_NORRISH")
-    k_protein = constants.get("K_PROTEIN_NORRISH")
-    if k_sugar is None or k_protein is None:
-        logging.error("Norrish constants (K_SUGAR/K_PROTEIN) not found.")
-        return None
-    total_g = composition.get("total_g", 0.0)
-    if total_g == 0:
-        return 1.0
-    moles_water = composition["water_g"] / MOLAR_MASS_WATER
-    moles_sugar = composition["sugar_g"] / MOLAR_MASS_SUGAR
-    moles_protein = composition["protein_g"] / MOLAR_MASS_PROTEIN
-    total_moles = moles_water + moles_sugar + moles_protein
-    if total_moles == 0:
-        return 1.0
-    x_water = moles_water / total_moles
-    x_sugar = moles_sugar / total_moles
-    x_protein = moles_protein / total_moles
-    try:
-        exponent = -(k_sugar * x_sugar**2 + k_protein * x_protein**2)
-        aw = x_water * math.exp(exponent)
-        return min(max(aw, 0.0), 1.0)
-    except (OverflowError, ValueError) as e:
-        logging.exception(f"Error in water activity calculation: {e}")
-        return None
-
-
-def estimate_shelf_life(water_activity: float) -> tuple[int, str]:
-    """Estimates shelf life in weeks based on water activity.
-
-    Args:
-        water_activity: The calculated water activity of the product.
-
-    Returns:
-        A tuple containing the estimated shelf life in weeks and a risk assessment string.
+    Calculates Water Activity (aw) using the Norrish Equation.
+    aw = Xw * exp(-K * Xs^2)
     """
-    if water_activity < 0.68:
-        return (16, "Low (Rancidity Risk)")
-    if 0.68 <= water_activity <= 0.75:
-        return (12, "Safe (Target Range)")
-    if 0.75 < water_activity <= 0.85:
-        return (4, "Risky (Slow Mold Growth)")
-    return (1, "Unsafe (Fast Mold Growth)")
+
+    @staticmethod
+    def calculate_aw(water_fraction: float, solute_fractions: dict) -> float:
+        """
+        Args:
+            water_fraction: Mole fraction of water
+            solute_fractions: Dict of {solute_type: mole_fraction}
+                             e.g., {'sugar': 0.2, 'protein': 0.05}
+        Returns:
+            float: Estimated water activity (0.0 - 1.0)
+        """
+        if water_fraction <= 0:
+            return 0.0
+        if water_fraction >= 1:
+            return 1.0
+        exponent_sum = 0.0
+        if "sugar" in solute_fractions:
+            x_sugar = solute_fractions["sugar"]
+            exponent_sum += GelatoConstants.K_SUGAR * x_sugar**2
+        if "protein" in solute_fractions:
+            x_protein = solute_fractions["protein"]
+            exponent_sum += GelatoConstants.K_PROTEIN * x_protein**2
+        try:
+            aw = water_fraction * math.exp(-exponent_sum)
+            return round(min(max(aw, 0.0), 1.0), 3)
+        except OverflowError:
+            logging.exception("Overflow error in calculate_aw")
+            return 0.0
+
+    @staticmethod
+    def estimate_shelf_life_weeks(aw: float) -> int:
+        """
+        Estimates shelf life based on Aw at standard storage temps.
+        """
+        if aw > 0.85:
+            return 1
+        elif aw > 0.8:
+            return 2
+        elif aw > 0.75:
+            return 4
+        elif aw >= 0.68:
+            return 12
+        else:
+            return 16

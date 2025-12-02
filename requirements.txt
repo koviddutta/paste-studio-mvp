@@ -1,5 +1,6 @@
-reflex==0.8.17
-reflex-monaco
+reflex==0.8.20
 supabase
 postgrest
 PyGithub
+reflex-monaco
+beautifulsoup4
