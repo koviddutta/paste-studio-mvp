@@ -4,16 +4,12 @@ Placeholder for future implementation of custom sweet profiling and categorizati
 """
 
 from __future__ import annotations
-
-from typing import Tuple
-from app.database.supabase_client import get_client
-
+from app.database.supabase_client import get_supabase
 from .domain import SweetProfile
 
 
 def _map_category_to_formulation_type(category: str) -> str:
     category = (category or "").lower()
-
     if "nut" in category:
         return "eggs_nuts"
     if "chocolate" in category or "cocoa" in category:
@@ -22,7 +18,6 @@ def _map_category_to_formulation_type(category: str) -> str:
         return "fruit_sorbet"
     if "dairy" in category:
         return "pure_dairy"
-
     return "default"
 
 
@@ -34,7 +29,7 @@ def _infer_intensity_tag(sugars_pct: float, afp_per_100g: float) -> str:
     return "medium"
 
 
-def _make_band(center: float | None, rel_tol: float = 0.15) -> Tuple[float, float]:
+def _make_band(center: float | None, rel_tol: float = 0.15) -> tuple[float, float]:
     """
     Take a single target value from DB and create a [min, max] band around it.
     rel_tol = 0.15 → ±15% of the value.
@@ -53,12 +48,9 @@ def build_sweet_profile_from_db(sweet_id: int) -> SweetProfile:
       2) Using sweet_name to find corresponding sweet_paste_profiles row
       3) Converting single target_*_pct values into min/max bands
     """
-    supabase = get_client()
-
-    # 1) sweet_compositions row
+    supabase = get_supabase()
     comp_resp = (
-        supabase
-        .table("sweet_compositions")
+        supabase.table("sweet_compositions")
         .select("*")
         .eq("id", sweet_id)
         .single()
@@ -67,15 +59,11 @@ def build_sweet_profile_from_db(sweet_id: int) -> SweetProfile:
     comp_row = comp_resp.data
     if not comp_row:
         raise ValueError(f"sweet_compositions: sweet id {sweet_id} not found")
-
     sweet_name = comp_row.get("sweet_name") or comp_row.get("name")
     if not sweet_name:
         raise ValueError(f"sweet_compositions id {sweet_id} missing sweet_name/name")
-
-    # 2) sweet_paste_profiles row joined by sweet_name
     prof_resp = (
-        supabase
-        .table("sweet_paste_profiles")
+        supabase.table("sweet_paste_profiles")
         .select("*")
         .eq("sweet_name", sweet_name)
         .single()
@@ -86,40 +74,32 @@ def build_sweet_profile_from_db(sweet_id: int) -> SweetProfile:
         raise ValueError(
             f"sweet_paste_profiles: no row found for sweet_name='{sweet_name}'"
         )
-
     category = comp_row.get("category") or "default"
     formulation_type = _map_category_to_formulation_type(category)
-
     water_pct = float(comp_row.get("moisture_pct") or 0.0)
     sugars_pct = float(comp_row.get("sugar_pct") or comp_row.get("sugars_pct") or 0.0)
     fat_pct = float(comp_row.get("fat_pct") or 0.0)
     msnf_pct = float(comp_row.get("msnf_pct") or 0.0)
     other_pct = float(comp_row.get("other_pct") or 0.0)
     afp_per_100g = float(comp_row.get("afp_per_100g") or 0.0)
-
     sweet_pct_min = float(prof_row.get("sweet_pct_min") or 40.0)
     sweet_pct_max = float(prof_row.get("sweet_pct_max") or 80.0)
     sweet_pct_default = float(prof_row.get("sweet_pct_default") or 60.0)
-
-    # Convert single targets into bands with ±15% tolerance (tune later if needed)
     target_sugar_center = prof_row.get("target_sugar_pct")
     target_fat_center = prof_row.get("target_fat_pct")
     target_msnf_center = prof_row.get("target_msnf_pct")
     target_solids_center = prof_row.get("target_total_solids_pct")
-
     target_sugar_range = _make_band(target_sugar_center, rel_tol=0.15)
-    target_fat_range = _make_band(target_fat_center, rel_tol=0.20)
-    target_msnf_range = _make_band(target_msnf_center, rel_tol=0.20)
-    target_solids_range = _make_band(target_solids_center, rel_tol=0.10)
-
+    target_fat_range = _make_band(target_fat_center, rel_tol=0.2)
+    target_msnf_range = _make_band(target_msnf_center, rel_tol=0.2)
+    target_solids_range = _make_band(target_solids_center, rel_tol=0.1)
     target_aw_min = float(prof_row.get("target_aw_min") or 0.68)
-    target_aw_max = float(prof_row.get("target_aw_max") or 0.80)
+    target_aw_max = float(prof_row.get("target_aw_max") or 0.8)
     target_aw_range = (target_aw_min, target_aw_max)
-
     base_template_id = int(prof_row.get("base_template_id") or 1)
-
-    intensity_tag = _infer_intensity_tag(sugars_pct=sugars_pct, afp_per_100g=afp_per_100g)
-
+    intensity_tag = _infer_intensity_tag(
+        sugars_pct=sugars_pct, afp_per_100g=afp_per_100g
+    )
     return SweetProfile(
         sweet_id=sweet_id,
         sweet_name=sweet_name,

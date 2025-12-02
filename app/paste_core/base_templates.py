@@ -61,7 +61,7 @@ def _fetch_ingredient_composition(name: str) -> Ingredient:
     )
 
 
-def _extract_ingredients_map(base_ingredients: Any) -> Dict[str, float]:
+def _extract_ingredients_map(base_ingredients: dict | list) -> dict[str, float]:
     """
     Normalises base_ingredients JSONB to a simple:
         { ingredient_name: parts_or_percent, ... }
@@ -72,22 +72,20 @@ def _extract_ingredients_map(base_ingredients: Any) -> Dict[str, float]:
     """
     if base_ingredients is None:
         raise ValueError("base_ingredients is NULL")
-
     if isinstance(base_ingredients, dict):
-        if all(isinstance(v, (int, float)) for v in base_ingredients.values()):
+        if all((isinstance(v, (int, float)) for v in base_ingredients.values())):
             return {str(k): float(v) for k, v in base_ingredients.items()}
-        raise ValueError(f"Unsupported dict structure in base_ingredients: {base_ingredients}")
-
+        raise ValueError(
+            f"Unsupported dict structure in base_ingredients: {base_ingredients}"
+        )
     if isinstance(base_ingredients, list):
-        ingredients_map: Dict[str, float] = {}
+        ingredients_map: dict[str, float] = {}
         for item in base_ingredients:
             if not isinstance(item, dict):
                 raise ValueError(f"Unsupported item in base_ingredients list: {item}")
-
             name = item.get("name") or item.get("ingredient") or item.get("label")
             if not name:
                 raise ValueError(f"No ingredient name field in: {item}")
-
             parts = (
                 item.get("relative_pct_of_base")
                 or item.get("percent")
@@ -96,10 +94,9 @@ def _extract_ingredients_map(base_ingredients: Any) -> Dict[str, float]:
                 or item.get("amount")
             )
             if parts is None:
-                raise ValueError(f"No numeric relative_pct_of_base/percent/etc in: {item}")
-
+                raise ValueError(
+                    f"No numeric relative_pct_of_base/percent/etc in: {item}"
+                )
             ingredients_map[str(name)] = float(parts)
-
         return ingredients_map
-
     raise ValueError(f"Unsupported base_ingredients type: {type(base_ingredients)}")
