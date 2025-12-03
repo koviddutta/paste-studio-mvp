@@ -168,15 +168,34 @@ def validate_paste(
     ext_rules = _load_extended_thresholds(formulation_type=formulation_type)
     global_rules = _load_global_thresholds()
     value_map: dict[str, float] = {
+        # Existing global / legacy parameters
         "afp_total": metrics.afp_total,
         "pod_sweetness": metrics.pod_sweetness,
         "de_total": metrics.de_total,
         "pac_total": metrics.pac_total,
+
+        # Solids
         "solids_total": metrics.solids_pct,
+        "total_solids_pct": metrics.solids_pct,      # if global table uses this
+        "paste_total_solids_pct": metrics.solids_pct,  # new paste-specific rule
+
+        # Fat
         "fat_total": metrics.fat_pct,
-        "water_activity": metrics.water_activity,
+        "paste_fat_pct": metrics.fat_pct,            # new paste-specific rule
+
+        # Sugars
         "final_sugars_pct": metrics.sugar_pct,
+        "paste_sugars_pct": metrics.sugar_pct,       # new paste-specific rule
+
+        # Water activity
+        "water_activity": metrics.water_activity,
+        "paste_aw": metrics.water_activity,          # new paste-specific rule
     }
+
+    # Optional lactose mapping if you added lactose_pct to PasteMetrics
+    if getattr(metrics, "lactose_pct", None) is not None:
+        value_map["paste_lactose_pct"] = metrics.lactose_pct
+
     params: list[ParameterStatus] = []
     worst_severity = "OPTIMAL"
     severity_rank = {"OPTIMAL": 0, "ACCEPTABLE": 1, "CRITICAL": 2}
