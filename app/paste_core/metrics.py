@@ -110,6 +110,31 @@ def compute_paste_metrics(
         sp_total=afp_pod["sp_total"],
         water_activity=aw,
     )
+    def validate_paste_metrics(
+    metrics: PasteMetrics,
+    sweet_profile: SweetProfile | None,
+) -> ValidationReport:
+    # Map DB parameter_name → numeric value from PasteMetrics
+    parameter_values: dict[str, float | None] = {
+        "paste_total_solids_pct": metrics.total_solids_pct,
+        "paste_fat_pct": metrics.fat_pct,
+        "paste_sugars_pct": metrics.sugars_pct,
+        "paste_aw": metrics.water_activity,
+        "paste_lactose_pct": metrics.lactose_pct,
+        # keep your existing mappings too, e.g.:
+        # "afp_total": metrics.afp_total,
+        # "pac_total": metrics.pac_total,
+        # "pod_sugars": metrics.pod_sugars,
+        # etc.
+    }
+
+    # then you probably already load rules from Supabase:
+    rules = load_threshold_rules_from_db(formulation_type="sweet_paste")
+    violations: list[str] = []
+    warnings: list[str] = []
+    infos: list[str] = []
+    # …
+
     @dataclass
 class PasteMetrics:
     total_solids_pct: float
