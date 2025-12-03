@@ -3,48 +3,69 @@ Manual definitions for standard gelato base profiles.
 Used for calculating infusion rates of pastes into bases.
 """
 
-from app.paste_core.domain import GelatoBaseProfile
+# app/paste_core/base_profiles.py
+
+from .domain import GelatoBaseProfile
 
 
 def white_base_profile() -> GelatoBaseProfile:
     """
-    Returns a standard 'White Base' (Fiordilatte) profile.
-    Typically milk-based, neutral flavor, moderate fat.
+    Your actual white base, per 100 g.
     """
     return GelatoBaseProfile(
-        name="Standard White Base",
-        sugar_pct=18.0,
-        fat_pct=4.5,
-        solids_pct=38.0,
-        sugar_min=16.0,
+        name="white_base",
+
+        # Actual composition from your spreadsheet (per 100 g)
+        sugar_pct=17.87,
+        fat_pct=6.01,
+        solids_pct=34.93,
+
+        # Finished gelato target ranges
+        sugar_min=18.0,
         sugar_max=22.0,
-        fat_min=4.0,
-        fat_max=10.0,
-        solids_min=36.0,
-        solids_max=42.0,
-        afp_total=30.0,
-        afp_min=25.0,
-        afp_max=35.0,
+        fat_min=7.0,
+        fat_max=16.0,
+        solids_min=37.0,
+        solids_max=46.0,
     )
 
 
 def kulfi_base_profile() -> GelatoBaseProfile:
     """
-    Returns a 'Kulfi Base' profile.
-    Rich, reduced milk style, higher solids, higher fat tolerance.
+    Kulfi base (12% sugar).
     """
     return GelatoBaseProfile(
-        name="Rich Kulfi Base",
-        sugar_pct=16.0,
-        fat_pct=10.0,
+        name="kulfi_base",
+
+        sugar_pct=12.0,
+        fat_pct=12.0,
         solids_pct=42.0,
-        sugar_min=16.0,
-        sugar_max=25.0,
+
+        # Kulfi ranges (thicker, higher solids)
+        sugar_min=18.0,
+        sugar_max=22.0,
+        fat_min=10.0,
+        fat_max=18.0,
+        solids_min=40.0,
+        solids_max=50.0,
+    )
+
+
+def chocolate_base_profile() -> GelatoBaseProfile:
+    """
+    Your chocolate base, per 100 g.
+    """
+    return GelatoBaseProfile(
+        name="chocolate_base",
+
+        sugar_pct=19.74,
+        fat_pct=8.58,
+        solids_pct=41.69,
+
+        sugar_min=17.0,
+        sugar_max=21.0,
         fat_min=8.0,
-        fat_max=15.0,
-        solids_min=38.0,
-        solids_max=48.0,
-        afp_total=28.0,
-        afp_min=24.0,
-        afp_max=36.0,
+        fat_max=14.0,
+        solids_min=40.0,
+        solids_max=50.0,
     )
