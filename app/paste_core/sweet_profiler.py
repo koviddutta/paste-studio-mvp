@@ -10,6 +10,14 @@ from .domain import SweetProfile
 
 def _map_category_to_formulation_type(category: str) -> str:
     category = (category or "").lower()
+
+    # Explicit sweet-paste families
+    if "dairy_fried_sugary" in category:
+        return "sweet_paste"
+    if "gulab" in category or "jalebi" in category or "mithai" in category:
+        return "sweet_paste"
+
+    # Existing mappings (keep these)
     if "nut" in category:
         return "eggs_nuts"
     if "chocolate" in category or "cocoa" in category:
@@ -18,7 +26,9 @@ def _map_category_to_formulation_type(category: str) -> str:
         return "fruit_sorbet"
     if "dairy" in category:
         return "pure_dairy"
+
     return "default"
+
 
 
 def _infer_intensity_tag(sugars_pct: float, afp_per_100g: float) -> str:
