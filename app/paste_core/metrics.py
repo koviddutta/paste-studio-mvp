@@ -110,8 +110,7 @@ def compute_paste_metrics(
         sp_total=afp_pod["sp_total"],
         water_activity=aw,
     )
-   
-    @dataclass
+   @dataclass
 class PasteMetrics:
     total_solids_pct: float
     fat_pct: float
@@ -120,3 +119,5 @@ class PasteMetrics:
     lactose_pct: float | None  # can be None if not computed
 
     # …whatever else you already have: afp_total, pac_total, pod, etc.
+
+    
