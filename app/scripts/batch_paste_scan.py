@@ -1,30 +1,54 @@
-import os
-import sys
-import logging
-import asyncio
-
-sys.path.insert(0, os.getcwd())
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+from app.database.supabase_client import get_client
+from app.services.design_paste_from_sweet import design_paste_for_sweet_id
+from app.paste_core.base_profiles import white_base_profile
+from app.paste_core.gelato_infusion import recommend_paste_in_gelato
 
 
-async def main():
-    """
-    Batch Paste Scan Script.
+def main():
+    supabase = get_client()
 
-    This script is designed to iterate through all recipes in the database,
-    classify them, and attempt to generate a paste formulation for each.
+    # Pull some candidate sweets (filter by category if you like)
+    resp = (
+        supabase.table("sweet_compositions")
+        .select("id, sweet_name, category")
+        .limit(30)
+        .execute()
+    )
+    rows = resp.data or []
 
-    It serves as a bulk validation tool to identify:
-    1. Recipes that fail classification (e.g., unknown ingredients)
-    2. Recipes that produce unstable formulations (e.g., high Aw)
-    3. Statistical distribution of properties across the recipe dataset.
-    """
-    logger.info("Starting Batch Paste Scan...")
-    logger.info("TODO: Implement bulk recipe fetching and processing loop.")
+    base = white_base_profile()
+
+    for row in rows:
+        sid = row["id"]
+        name = row.get("sweet_name") or row.get("name")
+        category = row.get("category")
+
+        try:
+            designed = design_paste_for_sweet_id(sweet_id=sid, batch_weight_g=1000.0)
+        except Exception as e:
+            print(f"[SKIP] {name} (id={sid}) – error in paste design: {e}")
+            continue
+
+        # Paste science status
+        v = designed.validation
+        print(f"\n=== {name} (id={sid}, cat={category}) ===")
+        print("Paste overall:", v.overall_status)
+
+        # Infusion into white base
+        try:
+            rec = recommend_paste_in_gelato(
+                paste_metrics=designed.metrics,
+                base_profile=base,
+                sweet_profile=designed.sweet_profile,
+            )
+            print(
+                f"→ White base: science_max={rec.p_science_max*100:.1f}%, "
+                f"reco_max={rec.p_recommended_max*100:.1f}%, "
+                f"default={rec.p_recommended_default*100:.1f}%"
+            )
+        except Exception as e:
+            print(f"→ Infusion calc error: {e}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
