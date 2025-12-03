@@ -16,6 +16,11 @@ def header() -> rx.Component:
                     class_name="text-sm font-medium text-gray-700 hover:text-violet-600",
                 ),
                 rx.el.a(
+                    "Paste Studio",
+                    href="/paste-studio",
+                    class_name="text-sm font-medium text-gray-700 hover:text-violet-600",
+                ),
+                rx.el.a(
                     "Library",
                     href="#",
                     class_name="text-sm font-medium text-gray-500 cursor-not-allowed",

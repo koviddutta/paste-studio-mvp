@@ -1,8 +1,59 @@
 import reflex as rx
-from typing import Optional
+from typing import Optional, TypedDict
 import logging
 from app.api.paste_api import design_paste_and_infusion
 from app.database.supabase_client import get_supabase
+
+
+class PasteMetrics(TypedDict):
+    sugar_pct: float
+    fat_pct: float
+    msnf_pct: float
+    other_pct: float
+    solids_pct: float
+    water_pct: float
+    water_activity: float
+    afp_total: float
+    pod_sweetness: float
+    de_total: float
+    pac_total: float
+
+
+class ValidationParameter(TypedDict):
+    name: str
+    value: float
+    status: str
+    message: str
+
+
+class ValidationReport(TypedDict):
+    overall_status: str
+    parameters: list[ValidationParameter]
+    key_recommendations: list[str]
+
+
+class InfusionRecommendation(TypedDict):
+    science_max: float
+    recommended_max: float
+    recommended_default: float
+    limits: dict[str, float]
+    commentary: list[str]
+
+
+class PasteResult(TypedDict):
+    sweet_name: str
+    base_name: str
+    sweet_pct: float
+    base_pct: float
+    metrics: PasteMetrics
+    validation: ValidationReport
+    infusion: InfusionRecommendation
+
+
+class SearchResult(TypedDict):
+    id: int
+    sweet_name: str
+    category: Optional[str]
 
 
 class PasteStudioState(rx.State):
@@ -12,14 +63,14 @@ class PasteStudioState(rx.State):
     """
 
     search_query: str = ""
-    search_results: list[dict[str, str | int | None]] = []
+    search_results: list[SearchResult] = []
     is_searching: bool = False
-    selected_sweet: Optional[dict[str, str | int | None]] = None
+    selected_sweet: Optional[SearchResult] = None
     selected_base: str = "white"
     batch_weight: float = 1000.0
     is_loading: bool = False
     error_message: Optional[str] = None
-    paste_result: Optional[dict] = None
+    paste_result: Optional[PasteResult] = None
 
     @rx.event
     async def search_sweets(self, query: str):
@@ -52,7 +103,7 @@ class PasteStudioState(rx.State):
             self.is_searching = False
 
     @rx.event
-    def select_sweet(self, sweet: dict[str, str | int | None]):
+    def select_sweet(self, sweet: SearchResult):
         """
         Selects a sweet from the search results.
         """
