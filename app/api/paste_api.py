@@ -18,19 +18,20 @@ def get_base_profile(base_name: str):
     return white_base_profile()
 
 
-def design_paste_and_infusion(sweet_id: int, base_name: str = "white", batch_weight_g: float = 1000.0) -> dict:
-    designed = design_paste_for_sweet_id(sweet_id=sweet_id, batch_weight_g=batch_weight_g)
-
+def design_paste_and_infusion(
+    sweet_id: int, base_name: str = "white", batch_weight_g: float = 1000.0
+) -> dict:
+    designed = design_paste_for_sweet_id(
+        sweet_id=sweet_id, batch_weight_g=batch_weight_g
+    )
     base = get_base_profile(base_name)
     rec = recommend_paste_in_gelato(
         paste_metrics=designed.metrics,
         base_profile=base,
         sweet_profile=designed.sweet_profile,
     )
-
     m = designed.metrics
     v = designed.validation
-
     return {
         "sweet_name": designed.sweet_profile.sweet_name,
         "base_name": base.name,
