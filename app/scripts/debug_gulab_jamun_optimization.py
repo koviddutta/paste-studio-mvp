@@ -50,7 +50,7 @@ def load_sweet_profile_and_base(sweet_name: str):
 
 def main():
     sweet_profile, sweet_comp, base_comp = load_sweet_profile_and_base("Gulab Jamun")
-    sweet_pct = sweet_profile.default_sweet_pct
+    sweet_pct = sweet_profile.sweet_pct_default
     base_pct = 100.0 - sweet_pct
     metrics_before = compute_paste_metrics(
         sweet_pct=sweet_pct,

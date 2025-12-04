@@ -8,8 +8,8 @@ from app.database.sweet_profiler import load_sweet_profile_and_base
 def main():
     sweet_profile, sweet_comp, base_comp = load_sweet_profile_and_base("Gulab Jamun")
     metrics = compute_paste_metrics(
-        sweet_pct=sweet_profile.default_sweet_pct,
-        base_pct=100.0 - sweet_profile.default_sweet_pct,
+        sweet_pct=sweet_profile.sweet_pct_default,
+        base_pct=100.0 - sweet_profile.sweet_pct_default,
         sweet_comp=sweet_comp,
         base_comp=base_comp,
     )
