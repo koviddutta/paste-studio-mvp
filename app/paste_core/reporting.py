@@ -4,12 +4,14 @@ from app.paste_core.domain import (
     PasteDesignReport,
     PasteIngredientLine,
     PasteInfusionRecommendation,
+    GelatoBaseProfile,
 )
 from app.paste_core.metrics import compute_paste_metrics
 from app.paste_core.validation import validate_paste
 from app.paste_core.optimizer import optimize_paste, apply_plan_to_metrics
 from app.paste_core.gelato_infusion import recommend_paste_in_gelato
-from app.database.sweet_profiler import load_sweet_profile_and_base
+from app.paste_core.sweet_profiler import build_sweet_profile_from_db
+from app.paste_core.base_templates import compute_base_template_from_db
 from app.database.supabase_client import get_supabase
 
 
@@ -120,8 +122,34 @@ def generate_paste_design_report(
       - Compute gelato infusion recommendation
       - Build a 1kg paste recipe + SOP for user
     """
-    sweet_profile, sweet_comp, base_comp = load_sweet_profile_and_base(sweet_name)
-    sweet_pct = sweet_profile.default_sweet_pct
+    supabase = get_supabase()
+    resp = (
+        supabase.table("sweet_compositions")
+        .select("id")
+        .ilike("sweet_name", f"%{sweet_name}%")
+        .limit(1)
+        .execute()
+    )
+    if not resp.data:
+        raise ValueError(f"Sweet '{sweet_name}' not found in sweet_compositions table.")
+    sweet_id = resp.data[0]["id"]
+    sweet_profile = build_sweet_profile_from_db(sweet_id)
+    base_template = compute_base_template_from_db(sweet_profile.base_template_id)
+    sweet_comp = {
+        "water_pct": sweet_profile.water_pct,
+        "sugars_pct": sweet_profile.sugars_pct,
+        "fat_pct": sweet_profile.fat_pct,
+        "msnf_pct": sweet_profile.msnf_pct,
+        "other_pct": sweet_profile.other_pct,
+    }
+    base_comp = {
+        "water_pct": base_template.water_pct,
+        "sugars_pct": base_template.sugars_pct,
+        "fat_pct": base_template.fat_pct,
+        "msnf_pct": base_template.msnf_pct,
+        "other_pct": base_template.other_pct,
+    }
+    sweet_pct = sweet_profile.sweet_pct_default
     base_pct = 100.0 - sweet_pct
     metrics_before = compute_paste_metrics(
         sweet_pct=sweet_pct,
