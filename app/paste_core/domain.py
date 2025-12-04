@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Optional
+from dataclasses import dataclass
+from typing import List, Optional, Dict
+
 
 
 @dataclass
@@ -262,3 +265,31 @@ class PasteOptimizationPlan:
     target_sugars_pct: Optional[float]
     actions: list[PasteAdjustment]
     notes: list[str]
+
+
+
+@dataclass
+class PasteIngredientLine:
+    ingredient_name: str
+    grams_per_kg_final: float
+    note: str = ""
+
+
+@dataclass
+class PasteDesignReport:
+    sweet_name: str
+    category: str
+    formulation_type: str  # e.g. "sweet_paste"
+    # Final designed paste recipe per 1 kg finished paste
+    ingredients: List[PasteIngredientLine]
+    # Metrics before and after optimization
+    metrics_before: PasteMetrics
+    metrics_after: PasteMetrics
+    validation_before: ValidationReport
+    validation_after: ValidationReport
+    # Infusion recommendation into a given gelato base
+    infusion_recommendation: Optional[PasteInfusionRecommendation]
+    # High-level notes for the user
+    key_notes: List[str]
+    # Optional: a simple SOP text block
+    sop_steps: List[str]
