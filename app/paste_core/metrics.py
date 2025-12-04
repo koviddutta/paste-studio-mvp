@@ -5,6 +5,8 @@ Placeholder for future implementation.
 
 from .water_activity import estimate_water_activity
 from .domain import PasteMetrics
+from .sugar_science import compute_sugar_system
+
 
 
 def compute_basic_composition_from_mix(
@@ -41,28 +43,27 @@ def compute_basic_composition_from_mix(
 
 
 def compute_afp_and_pod(
-    sugars_pct: float, sugar_mix_profile: dict[str, float] | None = None
+    sugars_pct: float,
+    sugar_mix_profile: dict[str, float] | None = None,
 ) -> dict[str, float]:
     """
-    Placeholder for AFP/POD/PAC/SP computations.
-    For now we assume:
-      - afp_total roughly proportional to total sugars
-      - pod_sweetness equals sugars_pct (will be refined with sugar spectrum)
-    sugar_mix_profile: optional dict of sugar_type -> pct within sugars
-    You will later plug in gelato_science_constants here.
+    Scientific AFP/PAC/POD/SP/DE computation based on sugar spectrum.
+
+    Args:
+        sugars_pct: total sugars (g per 100 g paste).
+        sugar_mix_profile:
+            Optional mapping sugar_type -> value (fraction / % / grams).
+            Keys should match those in sugar_science (e.g. 'sucrose',
+            'dextrose', 'glucose_syrup_de40', 'invert_sugar', etc.).
+
+    If sugar_mix_profile is None or empty, we fall back to your standard
+    70/10/20 blend (sucrose/dextrose/glucose_syrup_de40).
     """
-    afp_total = sugars_pct * 0.9
-    pod_sweetness = sugars_pct
-    de_total = 70.0
-    pac_total = sugars_pct * 1.7
-    sp_total = sugars_pct * 0.8
-    return {
-        "afp_total": afp_total,
-        "pod_sweetness": pod_sweetness,
-        "de_total": de_total,
-        "pac_total": pac_total,
-        "sp_total": sp_total,
-    }
+    return compute_sugar_system(
+        total_sugars_pct=sugars_pct,
+        sugar_profile=sugar_mix_profile,
+    )
+
 
 
 def compute_paste_metrics(
