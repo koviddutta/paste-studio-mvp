@@ -13,6 +13,11 @@ from app.paste_core.gelato_infusion import recommend_paste_in_gelato
 from app.paste_core.sweet_profiler import build_sweet_profile_from_db
 from app.paste_core.base_templates import compute_base_template_from_db
 from app.database.supabase_client import get_supabase
+from app.paste_core.base_profiles import (
+    white_base_profile,
+    kulfi_base_profile,
+    chocolate_base_profile,
+)
 
 
 def _build_ingredient_lines_for_1kg(
@@ -173,13 +178,13 @@ def generate_paste_design_report(
         formulation_type=formulation_type,
         sweet_profile=sweet_profile,
     )
-    base_profile = GelatoBaseProfile(
-        name=base_for_infusion,
-        sugar_pct=17.87,
-        fat_pct=6.01,
-        solids_pct=34.93,
-        afp_total=None,
-    )
+    base_name_clean = (base_for_infusion or "").lower()
+    if "kulfi" in base_name_clean:
+        base_profile = kulfi_base_profile()
+    elif "chocolate" in base_name_clean or "cocoa" in base_name_clean:
+        base_profile = chocolate_base_profile()
+    else:
+        base_profile = white_base_profile()
     infusion_rec = recommend_paste_in_gelato(
         paste_metrics=metrics_after,
         base_profile=base_profile,
