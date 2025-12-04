@@ -8,7 +8,6 @@ from .domain import PasteMetrics
 from .sugar_science import compute_sugar_system
 
 
-
 def compute_basic_composition_from_mix(
     sweet_pct: float,
     base_pct: float,
@@ -43,8 +42,7 @@ def compute_basic_composition_from_mix(
 
 
 def compute_afp_and_pod(
-    sugars_pct: float,
-    sugar_mix_profile: dict[str, float] | None = None,
+    sugars_pct: float, sugar_mix_profile: dict[str, float] | None = None
 ) -> dict[str, float]:
     """
     Scientific AFP/PAC/POD/SP/DE computation based on sugar spectrum.
@@ -60,10 +58,8 @@ def compute_afp_and_pod(
     70/10/20 blend (sucrose/dextrose/glucose_syrup_de40).
     """
     return compute_sugar_system(
-        total_sugars_pct=sugars_pct,
-        sugar_profile=sugar_mix_profile,
+        total_sugars_pct=sugars_pct, sugar_profile=sugar_mix_profile
     )
-
 
 
 def compute_paste_metrics(
