@@ -1,61 +1,47 @@
-import os
-import sys
-import logging
+# app/scripts/debug_optimize_paste.py
 
-sys.path.insert(0, os.getcwd())
-from app.services.design_paste_from_sweet import design_paste_for_sweet_id
+from app.paste_core.metrics import compute_paste_metrics
+from app.paste_core.domain import SweetProfile
 from app.paste_core.optimizer import optimize_paste
+from app.paste_core.validation import validate_paste
+from app.database.sweet_profiler import load_sweet_profile_and_base  # whatever you already use
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-    print("----------------------------------------------------------------")
-    print(" DEBUG SCRIPT: Optimization Logic Check")
-    print("----------------------------------------------------------------")
-    try:
-        print("""
-1. Designing Paste for Sweet ID 1 (Gulab Jamun)...""")
-        result = design_paste_for_sweet_id(sweet_id=1)
-        metrics = result.metrics
-        sp = result.sweet_profile
-        print(f"   Current Metrics (per 100g):")
-        print(f"     - Solids: {metrics.solids_pct:.2f}%")
-        print(f"     - Fat:    {metrics.fat_pct:.2f}%")
-        print(f"     - Sugar:  {metrics.sugar_pct:.2f}%")
-        print(f"     - Aw:     {metrics.water_activity:.3f}")
-        print(f"\n   Validation Status: {result.validation.overall_status}")
-        if result.validation.key_recommendations:
-            for rec in result.validation.key_recommendations:
-                print(f"     * {rec}")
-        print("""
-2. Running Paste Optimizer...""")
-        plan = optimize_paste(
-            metrics=metrics, formulation_type=sp.formulation_type, sweet_profile=sp
-        )
-        print("----------------------------------------------------------------")
-        print(f" OPTIMIZATION PLAN: {plan.formulation_type}")
-        print("----------------------------------------------------------------")
-        print(f"   Targets detected:")
-        print(f"     - Solids Target: {plan.target_solids_pct}%")
-        print(f"     - Fat Target:    {plan.target_fat_pct}%")
-        print(f"     - Sugar Target:  {plan.target_sugars_pct}%")
-        print("""
-   Suggested Actions:""")
-        if not plan.actions:
-            print("     (No specific quantitative actions suggested)")
-        else:
-            for action in plan.actions:
-                print(
-                    f"     [ADD] {action.ingredient_name:20} : {action.delta_g_per_kg:.1f} g/kg"
-                )
-                print(f"           Reason: {action.reason}")
-        print("""
-   Optimization Notes:""")
-        for note in plan.notes:
-            print(f"     * {note}")
-        print("----------------------------------------------------------------")
-    except Exception as e:
-        logging.exception(f"CRASHED: {e}")
+    sweet_profile, sweet_comp, base_comp = load_sweet_profile_and_base("Gulab Jamun")
+
+    metrics = compute_paste_metrics(
+        sweet_pct=sweet_profile.default_sweet_pct,  # e.g. 20
+        base_pct=100.0 - sweet_profile.default_sweet_pct,
+        sweet_comp=sweet_comp,
+        base_comp=base_comp,
+    )
+
+    report = validate_paste(
+        metrics=metrics,
+        formulation_type="sweet_paste",
+        sweet_profile=sweet_profile,
+    )
+
+    plan = optimize_paste(
+        metrics=metrics,
+        formulation_type="sweet_paste",
+        sweet_profile=sweet_profile,
+    )
+
+    print("=== PASTE METRICS ===")
+    print(metrics)
+    print("=== VALIDATION ===")
+    print(report.overall_status)
+    for p in report.parameters:
+        print("-", p.name, p.status, ":", p.message)
+
+    print("=== OPTIMIZATION PLAN ===")
+    for a in plan.actions:
+        print(f"* {a.ingredient_name}: {a.delta_g_per_kg:.1f} g/1kg ({a.reason})")
+    print("Notes:")
+    for n in plan.notes:
+        print("-", n)
 
 
 if __name__ == "__main__":
