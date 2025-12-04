@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from dataclasses import dataclass
 from typing import Optional
 
 
@@ -80,11 +79,6 @@ class PasteValidation:
     def has_failures(self) -> bool:
         """Checks if there are any failures."""
         return any((r.status == "FAIL" for r in self.results))
-
-    from dataclasses import dataclass, field
-
-
-from typing import Optional
 
 
 @dataclass
@@ -208,7 +202,6 @@ class DesignedPaste:
     metrics: PasteMetrics
     validation: Optional[ValidationReport] = None
     ingredient_breakdown: dict[str, float] = field(default_factory=dict)
-    from typing import Optional
 
 
 @dataclass
