@@ -168,29 +168,30 @@ def validate_paste(
     ext_rules = _load_extended_thresholds(formulation_type=formulation_type)
     global_rules = _load_global_thresholds()
     value_map: dict[str, float] = {
-        # Existing global / legacy parameters
+        # Existing metrics already being validated
         "afp_total": metrics.afp_total,
         "pod_sweetness": metrics.pod_sweetness,
         "de_total": metrics.de_total,
         "pac_total": metrics.pac_total,
 
-        # Solids
-        "solids_total": metrics.solids_pct,
+        # Solids (old + new names)
+        "solids_total": metrics.solids_pct,          # legacy name
         "total_solids_pct": metrics.solids_pct,      # if global table uses this
-        "paste_total_solids_pct": metrics.solids_pct,  # new paste-specific rule
+        "paste_total_solids_pct": metrics.solids_pct,  # NEW paste-specific rule
 
         # Fat
-        "fat_total": metrics.fat_pct,
-        "paste_fat_pct": metrics.fat_pct,            # new paste-specific rule
+        "fat_total": metrics.fat_pct,                # legacy name
+        "paste_fat_pct": metrics.fat_pct,            # NEW paste-specific rule
 
         # Sugars
-        "final_sugars_pct": metrics.sugar_pct,
-        "paste_sugars_pct": metrics.sugar_pct,       # new paste-specific rule
+        "final_sugars_pct": metrics.sugar_pct,       # legacy/global finished-gelato rule
+        "paste_sugars_pct": metrics.sugar_pct,       # NEW paste-specific rule
 
         # Water activity
-        "water_activity": metrics.water_activity,
-        "paste_aw": metrics.water_activity,          # new paste-specific rule
+        "water_activity": metrics.water_activity,    # legacy/global rule
+        "paste_aw": metrics.water_activity,          # NEW paste-specific rule
     }
+
 
     # Optional lactose mapping if you added lactose_pct to PasteMetrics
     if getattr(metrics, "lactose_pct", None) is not None:
