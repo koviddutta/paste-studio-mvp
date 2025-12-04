@@ -89,8 +89,18 @@ def compute_paste_metrics(
     water_pct = basic["water_pct"]
     water_g = water_pct
     sugar_like_solids_g = sugar_pct
-    aw = estimate_water_activity(
-        water_g=water_g, sugar_like_solids_g=sugar_like_solids_g
+
+    
+from .multi_aw import estimate_aw_multicomponent
+
+aw = estimate_aw_multicomponent(
+    water_pct=water_pct,
+    sugars_pct=sugar_pct,
+    msnf_pct=msnf_pct,
+    fat_pct=fat_pct,
+    other_pct=other_pct,
+    sugar_profile=None,   # For now; later use real sugar spectrum
+
     )
     afp_pod = compute_afp_and_pod(sugars_pct=sugar_pct)
     return PasteMetrics(
