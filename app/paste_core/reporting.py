@@ -163,9 +163,11 @@ def generate_paste_design_report(
         base_comp=base_comp,
     )
     validation_before = validate_paste(
-        metrics=metrics_before,
-        formulation_type=formulation_type,
-        sweet_profile=sweet_profile,
+    metrics=metrics_before,
+    formulation_type="sweet_paste",
+    sweet_profile=sweet_profile,
+    storage_profile="chilled",   # NEW
+
     )
     plan = optimize_paste(
         metrics=metrics_before,
@@ -174,9 +176,11 @@ def generate_paste_design_report(
     )
     metrics_after = apply_plan_to_metrics(metrics_before, plan)
     validation_after = validate_paste(
-        metrics=metrics_after,
-        formulation_type=formulation_type,
-        sweet_profile=sweet_profile,
+    metrics=metrics_after,
+    formulation_type="sweet_paste",
+    sweet_profile=sweet_profile,
+    storage_profile="chilled",   # NEW
+
     )
     base_name_clean = (base_for_infusion or "").lower()
     if "kulfi" in base_name_clean:
