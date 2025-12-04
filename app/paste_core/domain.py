@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
-# ... existing imports and dataclasses ...
 
 @dataclass
 class PasteComposition:
@@ -246,14 +245,13 @@ class PasteInfusionRecommendation:
     commentary: list[str] = field(default_factory=list)
 
 
-
-
 @dataclass
 class PasteAdjustment:
     """
     A single ingredient-level adjustment to move the paste towards target specs.
     delta_g_per_kg is grams to ADD (>0) or REMOVE (<0) per 1 kg of paste.
     """
+
     ingredient_name: str
     delta_g_per_kg: float
     reason: str
@@ -264,9 +262,10 @@ class PasteOptimizationPlan:
     """
     High-level optimization plan for a paste formulation.
     """
+
     formulation_type: str
     target_solids_pct: Optional[float]
     target_fat_pct: Optional[float]
     target_sugars_pct: Optional[float]
-    actions: List[PasteAdjustment]
-    notes: List[str]
+    actions: list[PasteAdjustment]
+    notes: list[str]
