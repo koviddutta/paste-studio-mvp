@@ -6,6 +6,7 @@ Placeholder for future implementation.
 from .water_activity import estimate_water_activity
 from .domain import PasteMetrics
 from .sugar_science import compute_sugar_system
+from .multi_aw import estimate_aw_multicomponent
 
 
 def compute_basic_composition_from_mix(
@@ -89,18 +90,13 @@ def compute_paste_metrics(
     water_pct = basic["water_pct"]
     water_g = water_pct
     sugar_like_solids_g = sugar_pct
-
-    
-from .multi_aw import estimate_aw_multicomponent
-
-aw = estimate_aw_multicomponent(
-    water_pct=water_pct,
-    sugars_pct=sugar_pct,
-    msnf_pct=msnf_pct,
-    fat_pct=fat_pct,
-    other_pct=other_pct,
-    sugar_profile=None,   # For now; later use real sugar spectrum
-
+    aw = estimate_aw_multicomponent(
+        water_pct=water_pct,
+        sugars_pct=sugar_pct,
+        msnf_pct=msnf_pct,
+        fat_pct=fat_pct,
+        other_pct=other_pct,
+        sugar_profile=None,
     )
     afp_pod = compute_afp_and_pod(sugars_pct=sugar_pct)
     return PasteMetrics(
