@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
-from dataclasses import dataclass
-from typing import List, Optional
+
 
 @dataclass
 class PasteComposition:
@@ -130,32 +129,6 @@ class SweetProfile:
     target_aw_range: tuple[float, float]
     base_template_id: int
     intensity_tag: str = "medium"
-    @dataclass
-class PasteIngredientLine:
-    ingredient_name: str
-    grams_per_kg_final: float
-    note: str = ""
-
-
-@dataclass
-class PasteDesignReport:
-    sweet_name: str
-    category: str
-    formulation_type: str  # e.g. "sweet_paste"
-    # Final designed paste recipe per 1 kg finished paste
-    ingredients: List[PasteIngredientLine]
-    # Metrics before and after optimization
-    metrics_before: "PasteMetrics"
-    metrics_after: "PasteMetrics"
-    validation_before: "ValidationReport"
-    validation_after: "ValidationReport"
-    # Infusion recommendation into a given gelato base
-    infusion_recommendation: Optional["PasteInfusionRecommendation"]
-    # High-level notes for the user
-    key_notes: List[str]
-    # Simple SOP text
-    sop_steps: List[str]
-
 
 
 @dataclass
@@ -197,31 +170,6 @@ class PasteMetrics:
     pac_total: float
     sp_total: float
     water_activity: float
-@dataclass
-class PasteIngredientLine:
-    ingredient_name: str
-    grams_per_kg_final: float
-    note: str = ""
-
-
-@dataclass
-class PasteDesignReport:
-    sweet_name: str
-    category: str
-    formulation_type: str  # e.g. "sweet_paste"
-    # Final designed paste recipe per 1 kg finished paste
-    ingredients: List[PasteIngredientLine]
-    # Metrics before and after optimization
-    metrics_before: "PasteMetrics"
-    metrics_after: "PasteMetrics"
-    validation_before: "ValidationReport"
-    validation_after: "ValidationReport"
-    # Infusion recommendation into a given gelato base
-    infusion_recommendation: Optional["PasteInfusionRecommendation"]
-    # High-level notes for the user
-    key_notes: List[str]
-    # Simple SOP text
-    sop_steps: List[str]
 
 
 @dataclass
@@ -238,32 +186,6 @@ class ValidationReport:
     parameters: list[ParameterStatus] = field(default_factory=list)
     overall_status: str = "UNKNOWN"
     key_recommendations: list[str] = field(default_factory=list)
-    @dataclass
-class PasteIngredientLine:
-    ingredient_name: str
-    grams_per_kg_final: float
-    note: str = ""
-
-
-@dataclass
-class PasteDesignReport:
-    sweet_name: str
-    category: str
-    formulation_type: str  # e.g. "sweet_paste"
-    # Final designed paste recipe per 1 kg finished paste
-    ingredients: List[PasteIngredientLine]
-    # Metrics before and after optimization
-    metrics_before: "PasteMetrics"
-    metrics_after: "PasteMetrics"
-    validation_before: "ValidationReport"
-    validation_after: "ValidationReport"
-    # Infusion recommendation into a given gelato base
-    infusion_recommendation: Optional["PasteInfusionRecommendation"]
-    # High-level notes for the user
-    key_notes: List[str]
-    # Simple SOP text
-    sop_steps: List[str]
-
 
 
 @dataclass
@@ -314,32 +236,13 @@ class PasteInfusionRecommendation:
     p_recommended_default: float
     science_limits: dict[str, float]
     commentary: list[str] = field(default_factory=list)
-    @dataclass
+
+
+@dataclass
 class PasteIngredientLine:
     ingredient_name: str
     grams_per_kg_final: float
     note: str = ""
-
-
-@dataclass
-class PasteDesignReport:
-    sweet_name: str
-    category: str
-    formulation_type: str  # e.g. "sweet_paste"
-    # Final designed paste recipe per 1 kg finished paste
-    ingredients: List[PasteIngredientLine]
-    # Metrics before and after optimization
-    metrics_before: "PasteMetrics"
-    metrics_after: "PasteMetrics"
-    validation_before: "ValidationReport"
-    validation_after: "ValidationReport"
-    # Infusion recommendation into a given gelato base
-    infusion_recommendation: Optional["PasteInfusionRecommendation"]
-    # High-level notes for the user
-    key_notes: List[str]
-    # Simple SOP text
-    sop_steps: List[str]
-
 
 
 @dataclass
@@ -369,22 +272,15 @@ class PasteOptimizationPlan:
 
 
 @dataclass
-class PasteIngredientLine:
-    ingredient_name: str
-    grams_per_kg_final: float
-    note: str = ""
-
-
-@dataclass
 class PasteDesignReport:
     sweet_name: str
     category: str
     formulation_type: str
     ingredients: list[PasteIngredientLine]
-    metrics_before: PasteMetrics
-    metrics_after: PasteMetrics
-    validation_before: ValidationReport
-    validation_after: ValidationReport
-    infusion_recommendation: Optional[PasteInfusionRecommendation]
+    metrics_before: "PasteMetrics"
+    metrics_after: "PasteMetrics"
+    validation_before: "ValidationReport"
+    validation_after: "ValidationReport"
+    infusion_recommendation: Optional["PasteInfusionRecommendation"]
     key_notes: list[str]
     sop_steps: list[str]
