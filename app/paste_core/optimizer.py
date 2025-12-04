@@ -11,6 +11,10 @@ import logging
 from app.database.supabase_client import get_supabase
 from .domain import PasteMetrics, SweetProfile, PasteOptimizationPlan, PasteAdjustment
 from .validation import ThresholdRule, _load_extended_thresholds
+from app.paste_core.multi_aw import estimate_aw_multicomponent
+from app.paste_core.sugar_science import compute_sugar_system
+from app.paste_core.domain import PasteMetrics
+from .validation import _load_extended_thresholds  # already imported above in your file
 
 
 def _load_ingredient_row(name_ilike: str) -> Optional[dict]:
@@ -208,10 +212,6 @@ def optimize_paste(
         notes=notes,
     )
 
-    from app.paste_core.multi_aw import estimate_aw_multicomponent
-from app.paste_core.sugar_science import compute_sugar_system
-from app.paste_core.domain import PasteMetrics
-from .validation import _load_extended_thresholds  # already imported above in your file
 
 
 def apply_plan_to_metrics(
