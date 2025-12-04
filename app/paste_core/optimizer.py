@@ -207,3 +207,117 @@ def optimize_paste(
         actions=actions,
         notes=notes,
     )
+
+    from app.paste_core.multi_aw import estimate_aw_multicomponent
+from app.paste_core.sugar_science import compute_sugar_system
+from app.paste_core.domain import PasteMetrics
+from .validation import _load_extended_thresholds  # already imported above in your file
+
+
+def apply_plan_to_metrics(
+    metrics: PasteMetrics,
+    plan: PasteOptimizationPlan,
+) -> PasteMetrics:
+    """
+    Apply a PasteOptimizationPlan (actions in g per 1 kg) to the current
+    PasteMetrics, using ingredients_master composition, and recompute
+    full PasteMetrics for the 'optimized' paste.
+
+    Assumptions:
+      - Start from a nominal 1 kg batch whose composition matches `metrics`.
+      - Each action.delta_g_per_kg is added to that batch.
+      - Ingredient composition is taken from ingredients_master:
+          water_pct   <- moisture_pct
+          sugars_pct  <- sugar_pct
+          fat_pct     <- fat_pct
+          msnf_pct    <- protein_pct  (proxy for MSNF)
+          other_pct   <- remaining % (100 - moisture - fat - sugar - protein)
+    """
+
+    # 1. Convert current metrics (percentages) to grams for a 1 kg batch
+    total_mass_g = 1000.0
+
+    sugar_g = metrics.sugar_pct * 10.0
+    fat_g = metrics.fat_pct * 10.0
+    msnf_g = metrics.msnf_pct * 10.0
+    other_g = metrics.other_pct * 10.0
+    water_g = metrics.water_pct * 10.0
+
+    # 2. For each adjustment, fetch ingredient composition and update grams
+    for action in plan.actions:
+        delta = action.delta_g_per_kg
+        if abs(delta) < 1e-6:
+            continue
+
+        row = _load_ingredient_row(action.ingredient_name)
+        if row is None:
+            logging.warning(
+                "apply_plan_to_metrics: ingredient '%s' not found in ingredients_master; skipping.",
+                action.ingredient_name,
+            )
+            continue
+
+        moisture_pct = float(row.get("moisture_pct", 0.0) or 0.0)
+        fat_pct = float(row.get("fat_pct", 0.0) or 0.0)
+        sugar_pct = float(row.get("sugar_pct", 0.0) or 0.0)
+        protein_pct = float(row.get("protein_pct", 0.0) or 0.0)
+
+        used_pct = moisture_pct + fat_pct + sugar_pct + protein_pct
+        other_pct = max(0.0, 100.0 - used_pct)
+
+        # grams contributed by this action
+        water_add = delta * moisture_pct / 100.0
+        sugar_add = delta * sugar_pct / 100.0
+        fat_add = delta * fat_pct / 100.0
+        msnf_add = delta * protein_pct / 100.0
+        other_add = delta * other_pct / 100.0
+
+        total_mass_g += delta
+        water_g += water_add
+        sugar_g += sugar_add
+        fat_g += fat_add
+        msnf_g += msnf_add
+        other_g += other_add
+
+    if total_mass_g <= 0:
+        raise ValueError("apply_plan_to_metrics: total_mass_g became non-positive")
+
+    # 3. Recompute percentages per 100 g for the new paste
+    sugar_pct_new = 100.0 * sugar_g / total_mass_g
+    fat_pct_new = 100.0 * fat_g / total_mass_g
+    msnf_pct_new = 100.0 * msnf_g / total_mass_g
+    other_pct_new = 100.0 * other_g / total_mass_g
+    solids_pct_new = 100.0 * (sugar_g + fat_g + msnf_g + other_g) / total_mass_g
+    water_pct_new = 100.0 * water_g / total_mass_g
+
+    # 4. Recompute aw using the multi-component model
+    aw_new = estimate_aw_multicomponent(
+        water_pct=water_pct_new,
+        sugars_pct=sugar_pct_new,
+        msnf_pct=msnf_pct_new,
+        fat_pct=fat_pct_new,
+        other_pct=other_pct_new,
+        sugar_profile=None,  # you can later pass a real sugar spectrum here
+    )
+
+    # 5. Recompute sugar science (AFP/PAC/POD/DE/SP)
+    sugar_model = compute_sugar_system(
+        total_sugars_pct=sugar_pct_new,
+        sugar_profile=None,  # or real spectrum once wired
+    )
+
+    # 6. Return a fresh PasteMetrics instance
+    return PasteMetrics(
+        sugar_pct=sugar_pct_new,
+        fat_pct=fat_pct_new,
+        msnf_pct=msnf_pct_new,
+        other_pct=other_pct_new,
+        solids_pct=solids_pct_new,
+        water_pct=water_pct_new,
+        afp_total=sugar_model["afp_total"],
+        pod_sweetness=sugar_model["pod_sweetness"],
+        de_total=sugar_model["de_total"],
+        pac_total=sugar_model["pac_total"],
+        sp_total=sugar_model["sp_total"],
+        water_activity=aw_new,
+    )
