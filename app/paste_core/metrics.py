@@ -9,6 +9,7 @@ from .sugar_science import compute_sugar_system
 from .multi_aw import estimate_aw_multicomponent
 
 
+
 def compute_basic_composition_from_mix(
     sweet_pct: float,
     base_pct: float,
@@ -99,6 +100,56 @@ def compute_paste_metrics(
         sugar_profile=None,
     )
     afp_pod = compute_afp_and_pod(sugars_pct=sugar_pct)
+    return PasteMetrics(
+        sugar_pct=sugar_pct,
+        fat_pct=fat_pct,
+        msnf_pct=msnf_pct,
+        other_pct=other_pct,
+        solids_pct=solids_pct,
+        water_pct=water_pct,
+        afp_total=afp_pod["afp_total"],
+        pod_sweetness=afp_pod["pod_sweetness"],
+        de_total=afp_pod["de_total"],
+        pac_total=afp_pod["pac_total"],
+        sp_total=afp_pod["sp_total"],
+        water_activity=aw,
+    )
+ 
+# ... keep your existing code ...
+
+
+def compute_paste_metrics_from_basic(basic: dict[str, float]) -> PasteMetrics:
+    """
+    Compute PasteMetrics from a basic composition dict:
+      basic = {
+        "water_pct": ...,
+        "sugars_pct": ...,
+        "fat_pct": ...,
+        "msnf_pct": ...,
+        "other_pct": ...,
+        "solids_pct": ...,
+      }
+
+    This is used for template-driven pastes where we already aggregated
+    composition from ingredient allocations.
+    """
+    sugar_pct = basic["sugars_pct"]
+    fat_pct = basic["fat_pct"]
+    msnf_pct = basic["msnf_pct"]
+    other_pct = basic["other_pct"]
+    solids_pct = basic["solids_pct"]
+    water_pct = basic["water_pct"]
+
+    # Aw: treat all sugars as sugar-like solids for now
+    water_g = water_pct
+    sugar_like_solids_g = sugar_pct
+    aw = estimate_water_activity(
+        water_g=water_g,
+        sugar_like_solids_g=sugar_like_solids_g,
+    )
+
+    afp_pod = compute_afp_and_pod(sugars_pct=sugar_pct)
+
     return PasteMetrics(
         sugar_pct=sugar_pct,
         fat_pct=fat_pct,
