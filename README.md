@@ -1,6 +1,5 @@
 # 🍬 Paste Studio MVP - Indian Sweets Formulation Engine
 
-[![Reflex](https://img.shields.io/badge/Built%20with-Reflex-purple)](https://reflex.dev)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-green)](https://supabase.com)
 
