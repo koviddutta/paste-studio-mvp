@@ -69,7 +69,7 @@ http://localhost:3000
 
 paste-studio-mvp/
 ├── app/
-│   ├── app.py                    # Main Reflex app
+│   ├── app.py                    # Main app
 │   ├── calculators/              # Property calculations
 │   │   ├── property_calculator.py
 │   │   ├── water_activity.py
